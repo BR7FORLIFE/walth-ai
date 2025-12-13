@@ -5,21 +5,13 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 import { authService } from "@/lib/auth";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Brain, ArrowLeft } from "lucide-react";
+import { ArrowLeft, BarChart3, Sparkles, TrendingUp } from "lucide-react";
 
 export default function AuthPage() {
   const router = useRouter();
+  const [activeTab, setActiveTab] = useState<"login" | "register">("login");
   const [loginData, setLoginData] = useState({ username: "", password: "" });
   const [registerData, setRegisterData] = useState({
     username: "",
@@ -72,235 +64,347 @@ export default function AuthPage() {
   };
 
   return (
-    <div className="min-h-screen flex">
+    <div className="h-screen w-full flex overflow-hidden bg-white dark:bg-slate-900">
       {/* Left Side - Form */}
-      <div className="flex-1 flex items-center justify-center p-4 animate-fade-in">
-        <div className="w-full max-w-md space-y-8">
-          <div className="text-center space-y-2">
-            <Link
-              href="/landing"
-              className="inline-flex items-center text-sm text-gray-600 hover:text-gray-900 mb-8"
-            >
-              <ArrowLeft className="h-4 w-4 mr-2" />
-              Volver al inicio
-            </Link>
-            <div className="flex items-center justify-center space-x-3 mb-4">
+      <div className="w-full lg:w-1/2 flex flex-col h-full relative z-10 overflow-y-auto">
+        <div className="p-6 md:p-8">
+          <Link
+            href="/landing"
+            className="inline-flex items-center text-sm text-slate-500 hover:text-primary dark:text-slate-400 dark:hover:text-primary transition-colors group"
+          >
+            <ArrowLeft className="h-4 w-4 mr-1 group-hover:-translate-x-1 transition-transform" />
+            Volver al inicio
+          </Link>
+        </div>
+
+        <div className="flex-grow flex flex-col justify-center items-center px-4 sm:px-6 lg:px-8 max-w-lg mx-auto w-full">
+          <div className="text-center mb-8">
+            <div className="flex items-center justify-center mb-4 space-x-2">
               <Image
                 src="/images/logo.jpg"
                 alt="WelthIA Logo"
-                width={48}
-                height={48}
-                className="rounded-lg"
+                width={40}
+                height={40}
+                className="rounded-xl"
+                unoptimized
               />
-              <span className="text-3xl font-bold">WelthIA</span>
+              <span className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white">
+                WelthIA
+              </span>
             </div>
-            <h1 className="text-2xl font-bold">Bienvenido</h1>
-            <p className="text-gray-600">
+            <h1 className="text-3xl font-bold text-slate-900 dark:text-white mb-2">
+              Bienvenido
+            </h1>
+            <p className="text-slate-500 dark:text-slate-400 text-sm">
               Accede a tu asistente de salud personalizado
             </p>
           </div>
 
-          <Card className="border-2 shadow-lg">
-            <CardContent className="pt-6">
-              <Tabs defaultValue="login" className="w-full">
-                <TabsList className="grid w-full grid-cols-2 mb-6">
-                  <TabsTrigger
-                    value="login"
-                    className="data-[state=active]:bg-black data-[state=active]:text-white"
+          <div className="w-full bg-white dark:bg-slate-800 rounded-2xl shadow-xl border border-slate-100 dark:border-slate-700 p-1">
+            {/* Custom Tabs */}
+            <div className="grid grid-cols-2 p-1 bg-slate-100 dark:bg-slate-800 rounded-xl mb-6 m-4">
+              <button
+                onClick={() => setActiveTab("login")}
+                className={`flex items-center justify-center py-2.5 text-sm font-medium rounded-lg transition-all duration-200 ${
+                  activeTab === "login"
+                    ? "bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-sm"
+                    : "text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200"
+                }`}
+              >
+                Iniciar Sesión
+              </button>
+              <button
+                onClick={() => setActiveTab("register")}
+                className={`flex items-center justify-center py-2.5 text-sm font-medium rounded-lg transition-all duration-200 ${
+                  activeTab === "register"
+                    ? "bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-sm"
+                    : "text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200"
+                }`}
+              >
+                Registrarse
+              </button>
+            </div>
+
+            {/* Login Form */}
+            {activeTab === "login" && (
+              <form
+                onSubmit={handleLogin}
+                className="space-y-5 px-4 pb-6 sm:px-6"
+              >
+                <div>
+                  <Label
+                    htmlFor="username"
+                    className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5"
                   >
-                    Iniciar Sesión
-                  </TabsTrigger>
-                  <TabsTrigger
-                    value="register"
-                    className="data-[state=active]:bg-black data-[state=active]:text-white"
+                    Usuario
+                  </Label>
+                  <Input
+                    id="username"
+                    name="username"
+                    type="text"
+                    placeholder="Ingresa tu usuario"
+                    value={loginData.username}
+                    onChange={(e) =>
+                      setLoginData({ ...loginData, username: e.target.value })
+                    }
+                    required
+                    className="block w-full px-4 py-3 rounded-lg bg-slate-50 dark:bg-slate-800/50 border-slate-300 dark:border-slate-600"
+                  />
+                </div>
+
+                <div>
+                  <div className="flex items-center justify-between mb-1.5">
+                    <Label
+                      htmlFor="password"
+                      className="block text-sm font-medium text-slate-700 dark:text-slate-300"
+                    >
+                      Contraseña
+                    </Label>
+                    <a
+                      href="#"
+                      className="text-xs font-medium text-primary hover:text-primary/80"
+                    >
+                      ¿Olvidaste tu contraseña?
+                    </a>
+                  </div>
+                  <Input
+                    id="password"
+                    name="password"
+                    type="password"
+                    placeholder="••••••••"
+                    value={loginData.password}
+                    onChange={(e) =>
+                      setLoginData({ ...loginData, password: e.target.value })
+                    }
+                    required
+                    className="block w-full px-4 py-3 rounded-lg bg-slate-50 dark:bg-slate-800/50 border-slate-300 dark:border-slate-600"
+                  />
+                </div>
+
+                {error && (
+                  <div className="bg-red-50 dark:bg-red-900/20 border-l-4 border-red-500 p-3 rounded-r-lg">
+                    <p className="text-sm text-red-900 dark:text-red-100 font-medium">
+                      {error}
+                    </p>
+                  </div>
+                )}
+
+                <div className="pt-2">
+                  <button
+                    type="submit"
+                    disabled={loading}
+                    className="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-semibold text-white bg-primary hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    Registrarse
-                  </TabsTrigger>
-                </TabsList>
-
-                <TabsContent
-                  value="login"
-                  className="space-y-4 animate-slide-up"
-                >
-                  <form onSubmit={handleLogin} className="space-y-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="login-username">Usuario</Label>
-                      <Input
-                        id="login-username"
-                        placeholder="usuario"
-                        value={loginData.username}
-                        onChange={(e) =>
-                          setLoginData({
-                            ...loginData,
-                            username: e.target.value,
-                          })
-                        }
-                        required
-                        className="h-11"
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="login-password">Contraseña</Label>
-                      <Input
-                        id="login-password"
-                        type="password"
-                        placeholder="••••••••"
-                        value={loginData.password}
-                        onChange={(e) =>
-                          setLoginData({
-                            ...loginData,
-                            password: e.target.value,
-                          })
-                        }
-                        required
-                        className="h-11"
-                      />
-                    </div>
-                    {error && (
-                      <div className="text-sm text-red-600 bg-red-50 p-3 rounded-md border border-red-200">
-                        {error}
+                    {loading ? (
+                      <div className="flex items-center gap-2">
+                        <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                        Ingresando...
                       </div>
+                    ) : (
+                      "Iniciar Sesión"
                     )}
-                    <Button
-                      type="submit"
-                      className="w-full h-11 bg-black text-white hover:bg-gray-800 transition-colors"
-                      disabled={loading}
-                    >
-                      {loading ? "Ingresando..." : "Iniciar Sesión"}
-                    </Button>
-                  </form>
-                </TabsContent>
+                  </button>
+                </div>
+              </form>
+            )}
 
-                <TabsContent
-                  value="register"
-                  className="space-y-4 animate-slide-up"
-                >
-                  <form onSubmit={handleRegister} className="space-y-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="register-username">Usuario</Label>
-                      <Input
-                        id="register-username"
-                        placeholder="usuario"
-                        value={registerData.username}
-                        onChange={(e) =>
-                          setRegisterData({
-                            ...registerData,
-                            username: e.target.value,
-                          })
-                        }
-                        required
-                        minLength={3}
-                        className="h-11"
-                      />
-                      <p className="text-xs text-gray-500">
-                        Mínimo 3 caracteres
-                      </p>
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="register-password">Contraseña</Label>
-                      <Input
-                        id="register-password"
-                        type="password"
-                        placeholder="••••••••"
-                        value={registerData.password}
-                        onChange={(e) =>
-                          setRegisterData({
-                            ...registerData,
-                            password: e.target.value,
-                          })
-                        }
-                        required
-                        minLength={6}
-                        className="h-11"
-                      />
-                      <p className="text-xs text-gray-500">
-                        Mínimo 6 caracteres
-                      </p>
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="confirm-password">
-                        Confirmar Contraseña
-                      </Label>
-                      <Input
-                        id="confirm-password"
-                        type="password"
-                        placeholder="••••••••"
-                        value={registerData.confirmPassword}
-                        onChange={(e) =>
-                          setRegisterData({
-                            ...registerData,
-                            confirmPassword: e.target.value,
-                          })
-                        }
-                        required
-                        className="h-11"
-                      />
-                    </div>
-                    {error && (
-                      <div className="text-sm text-red-600 bg-red-50 p-3 rounded-md border border-red-200">
-                        {error}
+            {/* Register Form */}
+            {activeTab === "register" && (
+              <form
+                onSubmit={handleRegister}
+                className="space-y-5 px-4 pb-6 sm:px-6"
+              >
+                <div>
+                  <Label
+                    htmlFor="register-username"
+                    className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5"
+                  >
+                    Usuario
+                  </Label>
+                  <Input
+                    id="register-username"
+                    name="username"
+                    type="text"
+                    placeholder="Ingresa tu usuario"
+                    value={registerData.username}
+                    onChange={(e) =>
+                      setRegisterData({
+                        ...registerData,
+                        username: e.target.value,
+                      })
+                    }
+                    required
+                    minLength={3}
+                    className="block w-full px-4 py-3 rounded-lg bg-slate-50 dark:bg-slate-800/50 border-slate-300 dark:border-slate-600"
+                  />
+                  <p className="text-xs text-slate-400 dark:text-slate-500 mt-1.5">
+                    Mínimo 3 caracteres
+                  </p>
+                </div>
+
+                <div>
+                  <Label
+                    htmlFor="register-password"
+                    className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5"
+                  >
+                    Contraseña
+                  </Label>
+                  <Input
+                    id="register-password"
+                    name="password"
+                    type="password"
+                    placeholder="••••••••"
+                    value={registerData.password}
+                    onChange={(e) =>
+                      setRegisterData({
+                        ...registerData,
+                        password: e.target.value,
+                      })
+                    }
+                    required
+                    minLength={6}
+                    className="block w-full px-4 py-3 rounded-lg bg-slate-50 dark:bg-slate-800/50 border-slate-300 dark:border-slate-600"
+                  />
+                  <p className="text-xs text-slate-400 dark:text-slate-500 mt-1.5">
+                    Mínimo 6 caracteres
+                  </p>
+                </div>
+
+                <div>
+                  <Label
+                    htmlFor="confirm-password"
+                    className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5"
+                  >
+                    Confirmar Contraseña
+                  </Label>
+                  <Input
+                    id="confirm-password"
+                    name="confirmPassword"
+                    type="password"
+                    placeholder="••••••••"
+                    value={registerData.confirmPassword}
+                    onChange={(e) =>
+                      setRegisterData({
+                        ...registerData,
+                        confirmPassword: e.target.value,
+                      })
+                    }
+                    required
+                    className="block w-full px-4 py-3 rounded-lg bg-slate-50 dark:bg-slate-800/50 border-slate-300 dark:border-slate-600"
+                  />
+                </div>
+
+                {error && (
+                  <div className="bg-red-50 dark:bg-red-900/20 border-l-4 border-red-500 p-3 rounded-r-lg">
+                    <p className="text-sm text-red-900 dark:text-red-100 font-medium">
+                      {error}
+                    </p>
+                  </div>
+                )}
+
+                <div className="pt-2">
+                  <button
+                    type="submit"
+                    disabled={loading}
+                    className="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-semibold text-white bg-primary hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {loading ? (
+                      <div className="flex items-center gap-2">
+                        <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                        Registrando...
                       </div>
+                    ) : (
+                      "Crear Cuenta"
                     )}
-                    <Button
-                      type="submit"
-                      className="w-full h-11 text-white bg-black hover:bg-gray-800 transition-colors"
-                      disabled={loading}
-                    >
-                      {loading ? "Registrando..." : "Crear Cuenta"}
-                    </Button>
-                  </form>
-                </TabsContent>
-              </Tabs>
-            </CardContent>
-          </Card>
+                  </button>
+                </div>
+              </form>
+            )}
+          </div>
 
-          <p className="text-center text-sm text-gray-600">
+          <p className="mt-8 text-center text-xs text-slate-500 dark:text-slate-500 max-w-xs">
             Al continuar, aceptas nuestros{" "}
-            <a href="#" className="underline hover:text-gray-900">
+            <a href="#" className="font-medium text-primary hover:underline">
               Términos de Servicio
             </a>{" "}
             y{" "}
-            <a href="#" className="underline hover:text-gray-900">
+            <a href="#" className="font-medium text-primary hover:underline">
               Política de Privacidad
             </a>
+            .
           </p>
         </div>
+
+        <div className="h-8 md:h-12"></div>
       </div>
 
-      {/* Right Side - Hero Image/Gradient */}
-      <div className="hidden lg:flex flex-1 bg-gradient-to-br from-gray-900 via-gray-800 to-black items-center justify-center p-12 animate-fade-in">
-        <div className="max-w-md space-y-6 text-white">
-          <h2 className="text-4xl font-bold">
-            Transforma tu Salud con Inteligencia Artificial
+      {/* Right Side - Hero */}
+      <div className="hidden lg:flex w-1/2 bg-[#0a1120] relative items-center justify-center p-12 overflow-hidden">
+        {/* Animated blur effects */}
+        <div className="absolute top-0 right-0 w-full h-full opacity-30 pointer-events-none">
+          <div className="absolute top-[-10%] right-[-10%] w-[500px] h-[500px] bg-blue-600 rounded-full mix-blend-multiply filter blur-[120px] animate-pulse"></div>
+          <div className="absolute bottom-[-10%] left-[-10%] w-[600px] h-[600px] bg-indigo-900 rounded-full mix-blend-multiply filter blur-[100px] opacity-70"></div>
+        </div>
+
+        <div className="relative z-10 max-w-lg">
+          <h2 className="text-4xl lg:text-5xl font-extrabold text-white tracking-tight leading-tight mb-6">
+            Transforma tu Salud con{" "}
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-indigo-300">
+              Inteligencia Artificial
+            </span>
           </h2>
-          <p className="text-xl text-gray-300">
-            Evaluaciones personalizadas que se adaptan a tus necesidades únicas.
+          <p className="text-lg text-slate-300 mb-12 leading-relaxed">
+            Evaluaciones personalizadas que se adaptan a tus necesidades únicas
+            para un estilo de vida más saludable.
           </p>
-          <div className="space-y-4 pt-8">
-            <div className="flex items-start gap-4">
-              <div className="w-2 h-2 bg-white rounded-full mt-2"></div>
-              <div>
-                <h3 className="font-semibold mb-1">Análisis Completo</h3>
-                <p className="text-gray-400">
-                  Evaluamos cada aspecto de tu bienestar
+
+          <div className="space-y-8">
+            <div className="flex items-start">
+              <div className="flex-shrink-0">
+                <div className="flex items-center justify-center h-12 w-12 rounded-xl bg-blue-500/10 border border-blue-500/20 text-blue-400">
+                  <BarChart3 className="h-6 w-6" />
+                </div>
+              </div>
+              <div className="ml-4">
+                <h3 className="text-lg font-semibold text-white">
+                  Análisis Completo
+                </h3>
+                <p className="mt-1 text-slate-400 text-sm">
+                  Evaluamos cada aspecto de tu bienestar físico y mental con
+                  precisión.
                 </p>
               </div>
             </div>
-            <div className="flex items-start gap-4">
-              <div className="w-2 h-2 bg-white rounded-full mt-2"></div>
-              <div>
-                <h3 className="font-semibold mb-1">Planes Personalizados</h3>
-                <p className="text-gray-400">
-                  Recomendaciones únicas basadas en IA
+
+            <div className="flex items-start">
+              <div className="flex-shrink-0">
+                <div className="flex items-center justify-center h-12 w-12 rounded-xl bg-purple-500/10 border border-purple-500/20 text-purple-400">
+                  <Sparkles className="h-6 w-6" />
+                </div>
+              </div>
+              <div className="ml-4">
+                <h3 className="text-lg font-semibold text-white">
+                  Planes Personalizados
+                </h3>
+                <p className="mt-1 text-slate-400 text-sm">
+                  Recomendaciones únicas basadas en IA adaptadas a tu perfil.
                 </p>
               </div>
             </div>
-            <div className="flex items-start gap-4">
-              <div className="w-2 h-2 bg-white rounded-full mt-2"></div>
-              <div>
-                <h3 className="font-semibold mb-1">Seguimiento Continuo</h3>
-                <p className="text-gray-400">
-                  Monitorea tu progreso en tiempo real
+
+            <div className="flex items-start">
+              <div className="flex-shrink-0">
+                <div className="flex items-center justify-center h-12 w-12 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400">
+                  <TrendingUp className="h-6 w-6" />
+                </div>
+              </div>
+              <div className="ml-4">
+                <h3 className="text-lg font-semibold text-white">
+                  Seguimiento Continuo
+                </h3>
+                <p className="mt-1 text-slate-400 text-sm">
+                  Monitorea tu progreso en tiempo real y ajusta tus metas
+                  fácilmente.
                 </p>
               </div>
             </div>
