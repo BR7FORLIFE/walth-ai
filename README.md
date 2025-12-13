@@ -92,6 +92,27 @@ using (auth.uid() = user_id);
 
 -- Intentionally no INSERT/UPDATE policy.
 -- Subscription rows should be managed by an admin process (or a future payment webhook).
+
+-- Chat history (personalized assistant context)
+create table if not exists public.chat_messages (
+   id uuid primary key default gen_random_uuid(),
+   user_id uuid not null references auth.users(id) on delete cascade,
+   created_at timestamptz not null default now(),
+   role text not null check (role in ('user', 'assistant')),
+   content text not null
+);
+
+alter table public.chat_messages enable row level security;
+
+create policy "read own chat messages"
+on public.chat_messages
+for select
+using (auth.uid() = user_id);
+
+create policy "insert own chat messages"
+on public.chat_messages
+for insert
+with check (auth.uid() = user_id);
 ```
 
 ### 2) Corre el proyecto

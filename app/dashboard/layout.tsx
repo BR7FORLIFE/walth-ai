@@ -83,6 +83,11 @@ export default function DashboardLayout({
       label: "Seguimiento",
       icon: TrendingUp,
     },
+    {
+      href: "/dashboard/asistente",
+      label: "Asistente",
+      icon: User,
+    },
   ];
 
   return (
@@ -158,7 +163,7 @@ export default function DashboardLayout({
                       : "border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-300 hover:border-slate-300 dark:hover:border-slate-600"
                   }`}
                 >
-                  <Icon className="h-[18px] w-[18px]" />
+                  <Icon className="h-4.5 w-4.5" />
                   {item.label}
                 </Link>
               );
@@ -213,7 +218,7 @@ export default function DashboardLayout({
       </nav>
 
       {/* Main Content */}
-      <main className="flex-grow py-10 px-4 sm:px-6 lg:px-8">
+      <main className="grow py-10 px-4 sm:px-6 lg:px-8">
         <div className="max-w-7xl mx-auto animate-fade-in">{children}</div>
       </main>
     </div>
