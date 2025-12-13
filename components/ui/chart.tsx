@@ -61,6 +61,11 @@ type ChartTooltipContentProps = {
   payload?: RechartsTooltipPayload[];
   label?: string | number;
   config?: ChartConfig;
+  labelFormatter?: (label: string | number | undefined) => string;
+  valueFormatter?: (
+    dataKey: string,
+    value: number | string | undefined
+  ) => string;
 };
 
 export function ChartTooltipContent({
@@ -68,14 +73,29 @@ export function ChartTooltipContent({
   payload,
   label,
   config,
+  labelFormatter,
+  valueFormatter,
 }: ChartTooltipContentProps) {
   if (!active || !payload?.length) return null;
 
+  const labelText = labelFormatter ? labelFormatter(label) : String(label);
+  const order = config ? Object.keys(config) : [];
+  const orderedPayload = [...payload].sort((a, b) => {
+    const aKey = a.dataKey != null ? String(a.dataKey) : "";
+    const bKey = b.dataKey != null ? String(b.dataKey) : "";
+    const aIdx = order.indexOf(aKey);
+    const bIdx = order.indexOf(bKey);
+    if (aIdx === -1 && bIdx === -1) return 0;
+    if (aIdx === -1) return 1;
+    if (bIdx === -1) return -1;
+    return aIdx - bIdx;
+  });
+
   return (
     <div className="rounded-lg border bg-card px-3 py-2 text-sm shadow-sm">
-      <div className="mb-2 font-medium text-foreground">{String(label)}</div>
+      <div className="mb-2 font-medium text-foreground">{labelText}</div>
       <div className="space-y-1">
-        {payload
+        {orderedPayload
           .filter(
             (
               p
@@ -89,6 +109,12 @@ export function ChartTooltipContent({
               cfg?.color ??
               (typeof p.color === "string" ? p.color : "hsl(var(--primary))");
 
+            const valueText = valueFormatter
+              ? valueFormatter(dataKey, p.value)
+              : typeof p.value === "number"
+              ? String(p.value)
+              : String(p.value);
+
             return (
               <div
                 key={dataKey}
@@ -101,9 +127,7 @@ export function ChartTooltipContent({
                   />
                   <span>{cfg?.label ?? dataKey}</span>
                 </div>
-                <div className="font-semibold text-foreground">
-                  {typeof p.value === "number" ? p.value : String(p.value)}
-                </div>
+                <div className="font-semibold text-foreground">{valueText}</div>
               </div>
             );
           })}

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import type { HabitPlan, Habit } from "@/app/types/assessment";
 import { Button } from "@/components/ui/button";
@@ -17,7 +17,15 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { ClipboardList, TrendingUp, Calendar, Target } from "lucide-react";
-import { CartesianGrid, Line, LineChart, XAxis, Tooltip } from "recharts";
+import {
+  CartesianGrid,
+  Legend,
+  Line,
+  LineChart,
+  XAxis,
+  YAxis,
+  Tooltip,
+} from "recharts";
 
 type MeResponse = {
   isPremium: boolean;
@@ -89,27 +97,77 @@ export default function TrackingPage() {
     loadAll();
   }, [loadAll]);
 
-  const selectedPlan = plans.find((p) => p.id === selectedPlanId) ?? null;
+  const selectedPlan = useMemo(
+    () => plans.find((p) => p.id === selectedPlanId) ?? null,
+    [plans, selectedPlanId]
+  );
 
-  const progressSeries = (() => {
+  const planForMetrics = useMemo(() => {
+    return selectedPlan ?? plans[0] ?? null;
+  }, [selectedPlan, plans]);
+
+  const sortedPlansAsc = useMemo(() => {
     if (!me?.isPremium) return [];
 
-    const sorted = [...plans].sort(
-      (a, b) =>
-        new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
-    );
+    return [...plans]
+      .map((p) => ({
+        plan: p,
+        ts: Number.isFinite(new Date(p.createdAt).getTime())
+          ? new Date(p.createdAt).getTime()
+          : 0,
+      }))
+      .sort((a, b) => a.ts - b.ts)
+      .map((x) => x.plan);
+  }, [me?.isPremium, plans]);
 
-    return sorted.map((p) => ({
-      date: new Date(p.createdAt).toLocaleDateString("es", {
-        month: "short",
-        day: "2-digit",
-      }),
-      wellbeing: p.assessment.wellbeingScore,
-      stress: p.assessment.stressLevel,
-      sleep: p.assessment.sleepRepairScore,
-      exercise: p.assessment.exerciseFrequencyPerWeek,
-    }));
-  })();
+  const sortedPlansDesc = useMemo(() => {
+    return [...plans]
+      .map((p) => ({
+        plan: p,
+        ts: Number.isFinite(new Date(p.createdAt).getTime())
+          ? new Date(p.createdAt).getTime()
+          : 0,
+      }))
+      .sort((a, b) => b.ts - a.ts)
+      .map((x) => x.plan);
+  }, [plans]);
+
+  const latestPlan = useMemo(
+    () => sortedPlansDesc[0] ?? null,
+    [sortedPlansDesc]
+  );
+
+  const selectedTs = useMemo(() => {
+    if (!planForMetrics?.createdAt) return null;
+    const ts = new Date(planForMetrics.createdAt).getTime();
+    return Number.isFinite(ts) ? ts : null;
+  }, [planForMetrics?.createdAt]);
+
+  const latestTs = useMemo(() => {
+    if (!latestPlan?.createdAt) return null;
+    const ts = new Date(latestPlan.createdAt).getTime();
+    return Number.isFinite(ts) ? ts : null;
+  }, [latestPlan?.createdAt]);
+
+  const progressSeries = useMemo(() => {
+    if (!me?.isPremium) return [];
+
+    return sortedPlansAsc.map((p) => {
+      const ts = Number.isFinite(new Date(p.createdAt).getTime())
+        ? new Date(p.createdAt).getTime()
+        : 0;
+
+      return {
+        ts,
+        wellbeing: p.assessment.wellbeingScore,
+        stress: p.assessment.stressLevel,
+        sleep: p.assessment.sleepRepairScore,
+        exercise: p.assessment.exerciseFrequencyPerWeek,
+        habits: p.habits.length,
+        highHabits: p.habits.filter((h) => h.priority === "high").length,
+      };
+    });
+  }, [me?.isPremium, sortedPlansAsc]);
 
   const chartConfig = {
     wellbeing: {
@@ -117,7 +175,7 @@ export default function TrackingPage() {
       color: "hsl(var(--primary))",
     },
     stress: {
-      label: "Estrés",
+      label: "Estrés (↓ mejor)",
       color: "hsl(var(--destructive))",
     },
     sleep: {
@@ -129,6 +187,135 @@ export default function TrackingPage() {
       color: "hsl(var(--muted-foreground))",
     },
   } satisfies ChartConfig;
+
+  const formatTooltipLabel = useCallback((raw: string | number | undefined) => {
+    const ts = typeof raw === "number" ? raw : Number(raw);
+    if (!Number.isFinite(ts)) return String(raw ?? "");
+    return new Date(ts).toLocaleDateString("es", {
+      year: "numeric",
+      month: "long",
+      day: "2-digit",
+    });
+  }, []);
+
+  const formatTooltipValue = useCallback(
+    (key: string, raw: number | string | undefined) => {
+      if (raw == null) return "";
+      const value = typeof raw === "number" ? raw : Number(raw);
+      if (!Number.isFinite(value)) return String(raw);
+
+      if (key === "exercise") return `${value}/sem`;
+      if (key === "wellbeing" || key === "stress" || key === "sleep") {
+        return `${value}/10`;
+      }
+      return String(value);
+    },
+    []
+  );
+
+  const formatDeltaValue = useCallback((key: string, raw: number) => {
+    const rounded = Math.round(raw * 10) / 10;
+    const sign = rounded >= 0 ? "+" : "";
+
+    if (key === "exercise") return `${sign}${rounded}/sem`;
+    if (key === "wellbeing" || key === "stress" || key === "sleep") {
+      return `${sign}${rounded}/10`;
+    }
+    return `${sign}${rounded}`;
+  }, []);
+
+  // Comparison against historical baseline (premium only):
+  // - Prefer average of evaluations BEFORE the selected one.
+  // - If there are none, fall back to average of all other evaluations.
+  const comparisonBaselinePlans = useMemo(() => {
+    if (!me?.isPremium) return [] as HabitPlan[];
+    if (!planForMetrics?.id) return [] as HabitPlan[];
+    if (!selectedTs) return [] as HabitPlan[];
+
+    const prior = sortedPlansAsc.filter((p) => {
+      const ts = new Date(p.createdAt).getTime();
+      return Number.isFinite(ts) && ts < selectedTs;
+    });
+
+    if (prior.length > 0) return prior;
+    return sortedPlansAsc.filter((p) => p.id !== planForMetrics.id);
+  }, [me?.isPremium, planForMetrics?.id, selectedTs, sortedPlansAsc]);
+
+  const comparisonLabel = useMemo(() => {
+    if (!me?.isPremium) return null;
+    if (!planForMetrics?.id || !selectedTs) return null;
+
+    const hasPrior = sortedPlansAsc.some((p) => {
+      const ts = new Date(p.createdAt).getTime();
+      return (
+        Number.isFinite(ts) && ts < selectedTs && p.id !== planForMetrics.id
+      );
+    });
+
+    return hasPrior ? "vs promedio previo" : "vs promedio histórico";
+  }, [me?.isPremium, planForMetrics?.id, selectedTs, sortedPlansAsc]);
+
+  const historicalAverage = useMemo(() => {
+    if (!me?.isPremium) return null;
+    if (!comparisonBaselinePlans.length) return null;
+
+    const sums = comparisonBaselinePlans.reduce(
+      (acc, p) => {
+        acc.wellbeing += p.assessment.wellbeingScore;
+        acc.stress += p.assessment.stressLevel;
+        acc.sleep += p.assessment.sleepRepairScore;
+        acc.exercise += p.assessment.exerciseFrequencyPerWeek;
+        acc.habits += p.habits.length;
+        acc.highHabits += p.habits.filter((h) => h.priority === "high").length;
+        return acc;
+      },
+      {
+        wellbeing: 0,
+        stress: 0,
+        sleep: 0,
+        exercise: 0,
+        habits: 0,
+        highHabits: 0,
+      }
+    );
+
+    const n = comparisonBaselinePlans.length;
+    return {
+      wellbeing: sums.wellbeing / n,
+      stress: sums.stress / n,
+      sleep: sums.sleep / n,
+      exercise: sums.exercise / n,
+      habits: sums.habits / n,
+      highHabits: sums.highHabits / n,
+    };
+  }, [comparisonBaselinePlans, me?.isPremium]);
+
+  const delta = useMemo(() => {
+    if (!me?.isPremium || !historicalAverage || !planForMetrics) return null;
+
+    const baselineHabits = Math.round(historicalAverage.habits);
+    const baselineHighHabits = Math.round(historicalAverage.highHabits);
+
+    return {
+      habits: planForMetrics.habits.length - baselineHabits,
+      highHabits:
+        planForMetrics.habits.filter((h) => h.priority === "high").length -
+        baselineHighHabits,
+      wellbeing:
+        planForMetrics.assessment.wellbeingScore - historicalAverage.wellbeing,
+      stress: planForMetrics.assessment.stressLevel - historicalAverage.stress,
+      sleep:
+        planForMetrics.assessment.sleepRepairScore - historicalAverage.sleep,
+      exercise:
+        planForMetrics.assessment.exerciseFrequencyPerWeek -
+        historicalAverage.exercise,
+    };
+  }, [historicalAverage, me?.isPremium, planForMetrics]);
+
+  const selectedPlanIndexDesc = useMemo(() => {
+    if (!planForMetrics?.id) return -1;
+    return sortedPlansDesc.findIndex((p) => p.id === planForMetrics.id);
+  }, [planForMetrics?.id, sortedPlansDesc]);
 
   if (loading) {
     return (
@@ -172,7 +359,7 @@ export default function TrackingPage() {
     );
   }
 
-  const plan = selectedPlan ?? plans[0];
+  const plan = planForMetrics ?? plans[0];
 
   const highPriorityHabits = plan.habits.filter((h) => h.priority === "high");
   const mediumPriorityHabits = plan.habits.filter(
@@ -251,59 +438,208 @@ export default function TrackingPage() {
               Visualización basada en tu historial de evaluaciones.
             </CardDescription>
           </CardHeader>
-          <CardContent>
+          <CardContent className="pt-2 pb-6">
             {progressSeries.length < 2 ? (
               <div className="text-sm text-slate-600 dark:text-slate-400">
                 Necesitas al menos 2 evaluaciones para ver el progreso.
               </div>
             ) : (
-              <ChartContainer config={chartConfig} className="h-80 w-full">
-                <LineChart
-                  data={progressSeries}
-                  margin={{ left: 12, right: 12 }}
-                >
-                  <CartesianGrid vertical={false} stroke="hsl(var(--border))" />
-                  <XAxis
-                    dataKey="date"
-                    tickLine={false}
-                    axisLine={false}
-                    tickMargin={8}
-                    minTickGap={12}
-                  />
-                  <Tooltip
-                    content={<ChartTooltipContent config={chartConfig} />}
-                    cursor={{ stroke: "hsl(var(--border))" }}
-                  />
-                  <Line
-                    type="monotone"
-                    dataKey="wellbeing"
-                    stroke="var(--color-wellbeing)"
-                    strokeWidth={2}
-                    dot={false}
-                  />
-                  <Line
-                    type="monotone"
-                    dataKey="stress"
-                    stroke="var(--color-stress)"
-                    strokeWidth={2}
-                    dot={false}
-                  />
-                  <Line
-                    type="monotone"
-                    dataKey="sleep"
-                    stroke="var(--color-sleep)"
-                    strokeWidth={2}
-                    dot={false}
-                  />
-                  <Line
-                    type="monotone"
-                    dataKey="exercise"
-                    stroke="var(--color-exercise)"
-                    strokeWidth={2}
-                    dot={false}
-                  />
-                </LineChart>
-              </ChartContainer>
+              <div className="space-y-4">
+                {delta && (
+                  <div className="text-xs text-slate-600 dark:text-slate-400">
+                    {comparisonLabel ?? "Comparación"}: Bienestar{" "}
+                    {formatDeltaValue("wellbeing", delta.wellbeing)} • Estrés{" "}
+                    {formatDeltaValue("stress", delta.stress)} (↓ mejor) • Sueño{" "}
+                    {formatDeltaValue("sleep", delta.sleep)} • Ejercicio{" "}
+                    {formatDeltaValue("exercise", delta.exercise)}
+                  </div>
+                )}
+                <ChartContainer config={chartConfig} className="h-80 w-full">
+                  <LineChart
+                    data={progressSeries}
+                    margin={{ left: 8, right: 8 }}
+                  >
+                    <CartesianGrid
+                      vertical={false}
+                      stroke="hsl(var(--border))"
+                      strokeDasharray="3 3"
+                    />
+
+                    <XAxis
+                      dataKey="ts"
+                      tickLine={false}
+                      axisLine={false}
+                      tickMargin={8}
+                      minTickGap={14}
+                      tick={{
+                        fill: "hsl(var(--muted-foreground))",
+                        fontSize: 12,
+                      }}
+                      tickFormatter={(value) =>
+                        new Date(Number(value)).toLocaleDateString("es", {
+                          month: "short",
+                          day: "2-digit",
+                        })
+                      }
+                    />
+
+                    <YAxis
+                      yAxisId="score"
+                      domain={[0, 10]}
+                      tickLine={false}
+                      axisLine={false}
+                      tickMargin={8}
+                      tick={{
+                        fill: "hsl(var(--muted-foreground))",
+                        fontSize: 12,
+                      }}
+                    />
+
+                    <YAxis
+                      yAxisId="exercise"
+                      orientation="right"
+                      domain={[0, "auto"]}
+                      tickLine={false}
+                      axisLine={false}
+                      tickMargin={8}
+                      tick={{
+                        fill: "hsl(var(--muted-foreground))",
+                        fontSize: 12,
+                      }}
+                    />
+
+                    <Tooltip
+                      content={
+                        <ChartTooltipContent
+                          config={chartConfig}
+                          labelFormatter={formatTooltipLabel}
+                          valueFormatter={formatTooltipValue}
+                        />
+                      }
+                      cursor={{ stroke: "hsl(var(--border))" }}
+                    />
+
+                    <Legend
+                      verticalAlign="top"
+                      align="left"
+                      wrapperStyle={{ paddingBottom: 8 }}
+                      formatter={(value) => {
+                        const key = String(value);
+                        const cfg = (chartConfig as ChartConfig)[key];
+                        return (
+                          <span className="text-xs text-slate-600 dark:text-slate-400">
+                            {cfg?.label ?? key}
+                          </span>
+                        );
+                      }}
+                    />
+
+                    <Line
+                      yAxisId="score"
+                      type="monotone"
+                      dataKey="wellbeing"
+                      stroke="var(--color-wellbeing)"
+                      strokeWidth={2}
+                      dot={(p) => {
+                        const t = p?.payload?.ts as number | undefined;
+                        const isKey =
+                          (selectedTs != null && t === selectedTs) ||
+                          (latestTs != null && t === latestTs);
+                        if (!isKey) return false;
+                        return (
+                          <circle
+                            cx={p.cx}
+                            cy={p.cy}
+                            r={4}
+                            fill="var(--color-wellbeing)"
+                            stroke="hsl(var(--background))"
+                            strokeWidth={2}
+                          />
+                        );
+                      }}
+                      activeDot={{ r: 5 }}
+                    />
+
+                    <Line
+                      yAxisId="score"
+                      type="monotone"
+                      dataKey="stress"
+                      stroke="var(--color-stress)"
+                      strokeWidth={2}
+                      dot={(p) => {
+                        const t = p?.payload?.ts as number | undefined;
+                        const isKey =
+                          (selectedTs != null && t === selectedTs) ||
+                          (latestTs != null && t === latestTs);
+                        if (!isKey) return false;
+                        return (
+                          <circle
+                            cx={p.cx}
+                            cy={p.cy}
+                            r={4}
+                            fill="var(--color-stress)"
+                            stroke="hsl(var(--background))"
+                            strokeWidth={2}
+                          />
+                        );
+                      }}
+                      activeDot={{ r: 5 }}
+                    />
+
+                    <Line
+                      yAxisId="score"
+                      type="monotone"
+                      dataKey="sleep"
+                      stroke="var(--color-sleep)"
+                      strokeWidth={2}
+                      dot={(p) => {
+                        const t = p?.payload?.ts as number | undefined;
+                        const isKey =
+                          (selectedTs != null && t === selectedTs) ||
+                          (latestTs != null && t === latestTs);
+                        if (!isKey) return false;
+                        return (
+                          <circle
+                            cx={p.cx}
+                            cy={p.cy}
+                            r={4}
+                            fill="var(--color-sleep)"
+                            stroke="hsl(var(--background))"
+                            strokeWidth={2}
+                          />
+                        );
+                      }}
+                      activeDot={{ r: 5 }}
+                    />
+
+                    <Line
+                      yAxisId="exercise"
+                      type="monotone"
+                      dataKey="exercise"
+                      stroke="var(--color-exercise)"
+                      strokeWidth={2}
+                      dot={(p) => {
+                        const t = p?.payload?.ts as number | undefined;
+                        const isKey =
+                          (selectedTs != null && t === selectedTs) ||
+                          (latestTs != null && t === latestTs);
+                        if (!isKey) return false;
+                        return (
+                          <circle
+                            cx={p.cx}
+                            cy={p.cy}
+                            r={4}
+                            fill="var(--color-exercise)"
+                            stroke="hsl(var(--background))"
+                            strokeWidth={2}
+                          />
+                        );
+                      }}
+                      activeDot={{ r: 5 }}
+                    />
+                  </LineChart>
+                </ChartContainer>
+              </div>
             )}
           </CardContent>
         </Card>
@@ -358,6 +694,15 @@ export default function TrackingPage() {
                 {plan.habits.length}
               </span>
             </div>
+            {me?.isPremium && (
+              <div className="mt-2 text-xs text-slate-600 dark:text-slate-400">
+                {comparisonLabel && delta
+                  ? `${comparisonLabel}: ${delta.habits >= 0 ? "+" : ""}${
+                      delta.habits
+                    }`
+                  : "Sin comparación"}
+              </div>
+            )}
           </CardContent>
         </Card>
 
@@ -373,6 +718,20 @@ export default function TrackingPage() {
               <span className="text-2xl sm:text-3xl font-bold text-red-600 dark:text-red-400">
                 {highPriorityHabits.length}
               </span>
+            </div>
+            <div className="mt-2 text-xs text-slate-600 dark:text-slate-400">
+              {plan.habits.length > 0
+                ? `${Math.round(
+                    (highPriorityHabits.length / plan.habits.length) * 100
+                  )}% del total`
+                : "0% del total"}
+              {me?.isPremium && comparisonLabel && delta && (
+                <span>
+                  {` • ${comparisonLabel}: ${delta.highHabits >= 0 ? "+" : ""}${
+                    delta.highHabits
+                  }`}
+                </span>
+              )}
             </div>
           </CardContent>
         </Card>
@@ -390,6 +749,15 @@ export default function TrackingPage() {
                 {new Date(plan.createdAt).toLocaleDateString("es")}
               </span>
             </div>
+            {me?.isPremium && sortedPlansDesc.length > 0 && (
+              <div className="mt-2 text-xs text-slate-600 dark:text-slate-400">
+                {selectedPlanIndexDesc >= 0
+                  ? `Evaluación ${selectedPlanIndexDesc + 1} de ${
+                      sortedPlansDesc.length
+                    }`
+                  : ""}
+              </div>
+            )}
           </CardContent>
         </Card>
       </div>
