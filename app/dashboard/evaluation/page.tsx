@@ -33,6 +33,7 @@ import {
   Heart,
   Cigarette,
   Loader2,
+  CheckCircle,
 } from "lucide-react";
 
 const STEPS = [
@@ -289,8 +290,8 @@ export default function EvaluationPage() {
               </div>
             </div>
             {formData.weightKg && formData.heightM && (
-              <div className="bg-blue-50 p-3 rounded-md">
-                <p className="text-sm text-blue-900">
+              <div className="bg-blue-50 dark:bg-blue-900/20 border-l-4 border-primary p-4 rounded-r-lg">
+                <p className="text-sm text-blue-900 dark:text-blue-100 font-medium">
                   <strong>IMC:</strong>{" "}
                   {(
                     formData.weightKg /
@@ -304,9 +305,10 @@ export default function EvaluationPage() {
 
       case 2:
         return (
-          <div className="space-y-5">
-            <div className="bg-blue-50 border-l-4 border-blue-600 p-4 mb-4 rounded-r-lg">
-              <p className="text-sm text-blue-900">
+          <>
+            <div className="bg-blue-50 dark:bg-blue-900/20 border-l-4 border-blue-600 p-4 rounded-r-lg flex items-start gap-3">
+              <Moon className="w-5 h-5 text-blue-600 dark:text-blue-400 flex-shrink-0 mt-0.5" />
+              <p className="text-sm text-blue-900 dark:text-blue-100 font-medium leading-relaxed">
                 El sueño es fundamental para tu salud. Comparte tus horarios
                 habituales y cómo te sientes al despertar.
               </p>
@@ -320,7 +322,7 @@ export default function EvaluationPage() {
                   onChange={(value) => updateField("wakeTime", value)}
                   required
                 />
-                <p className="text-xs text-gray-500">
+                <p className="text-xs text-slate-400 dark:text-slate-500">
                   ¿A qué hora sueles levantarte entre semana?
                 </p>
               </div>
@@ -333,7 +335,7 @@ export default function EvaluationPage() {
                   onChange={(value) => updateField("sleepTime", value)}
                   required
                 />
-                <p className="text-xs text-gray-500">
+                <p className="text-xs text-slate-400 dark:text-slate-500">
                   ¿A qué hora te acuestas normalmente?
                 </p>
               </div>
@@ -353,7 +355,7 @@ export default function EvaluationPage() {
                   }
                   className="h-11"
                 />
-                <p className="text-xs text-gray-500">
+                <p className="text-xs text-slate-400 dark:text-slate-500">
                   <span className="inline-block w-2 h-2 bg-green-500 rounded-full mr-1"></span>
                   1-3: Despiertas fácilmente
                   <span className="inline-block w-2 h-2 bg-yellow-500 rounded-full mr-1 ml-2"></span>
@@ -380,7 +382,7 @@ export default function EvaluationPage() {
                   }
                   className="h-11"
                 />
-                <p className="text-xs text-gray-500">
+                <p className="text-xs text-slate-400 dark:text-slate-500">
                   ¿Cuántas veces te despiertas en promedio?
                 </p>
               </div>
@@ -403,7 +405,7 @@ export default function EvaluationPage() {
                   }
                   className="h-11"
                 />
-                <p className="text-xs text-gray-500">
+                <p className="text-xs text-slate-400 dark:text-slate-500">
                   1-3: Siento que no descansé • 4-6: Moderado • 7-10: Me siento
                   renovado
                 </p>
@@ -427,20 +429,21 @@ export default function EvaluationPage() {
                   }
                   className="h-11"
                 />
-                <p className="text-xs text-gray-500">
+                <p className="text-xs text-slate-400 dark:text-slate-500">
                   1-3: Tardo mucho • 4-6: Tiempo normal • 7-10: Me duermo
                   rápidamente
                 </p>
               </div>
             </div>
-          </div>
+          </>
         );
 
       case 3:
         return (
-          <div className="space-y-5">
-            <div className="bg-blue-50 border-l-4 border-blue-600 p-4 mb-4 rounded-r-lg">
-              <p className="text-sm text-blue-900">
+          <>
+            <div className="bg-blue-50 dark:bg-blue-900/20 border-l-4 border-blue-600 p-4 rounded-r-lg flex items-start gap-3">
+              <Utensils className="w-5 h-5 text-blue-600 dark:text-blue-400 flex-shrink-0 mt-0.5" />
+              <p className="text-sm text-blue-900 dark:text-blue-100 font-medium leading-relaxed">
                 Tus hábitos alimenticios son clave. Cuéntanos sobre tus horarios
                 de comida y consumo de agua.
               </p>
@@ -454,7 +457,7 @@ export default function EvaluationPage() {
                   onChange={(value) => updateField("breakfastTime", value)}
                   required
                 />
-                <p className="text-xs text-gray-500">
+                <p className="text-xs text-slate-400 dark:text-slate-500">
                   Tu primera comida del día
                 </p>
               </div>
@@ -467,7 +470,7 @@ export default function EvaluationPage() {
                   onChange={(value) => updateField("lunchTime", value)}
                   required
                 />
-                <p className="text-xs text-gray-500">
+                <p className="text-xs text-slate-400 dark:text-slate-500">
                   Tu comida principal del mediodía
                 </p>
               </div>
@@ -480,13 +483,16 @@ export default function EvaluationPage() {
                   onChange={(value) => updateField("dinnerTime", value)}
                   required
                 />
-                <p className="text-xs text-gray-500">
+                <p className="text-xs text-slate-400 dark:text-slate-500">
                   Tu última comida del día
                 </p>
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="waterCupsDay" className="text-sm font-medium">
+                <Label
+                  htmlFor="waterCupsDay"
+                  className="text-sm font-semibold text-slate-700 dark:text-slate-300"
+                >
                   Vasos de agua diarios (250ml c/u) *
                 </Label>
                 <Input
@@ -501,7 +507,7 @@ export default function EvaluationPage() {
                   className="h-11"
                   required
                 />
-                <p className="text-xs text-gray-500">
+                <p className="text-xs text-slate-400 dark:text-slate-500">
                   Recomendado: 8 vasos (2 litros) al día
                 </p>
               </div>
@@ -523,7 +529,7 @@ export default function EvaluationPage() {
                   }
                   className="h-11"
                 />
-                <p className="text-xs text-gray-500">
+                <p className="text-xs text-slate-400 dark:text-slate-500">
                   1 porción = 1 manzana, plátano o taza de fresas
                 </p>
               </div>
@@ -545,7 +551,7 @@ export default function EvaluationPage() {
                   }
                   className="h-11"
                 />
-                <p className="text-xs text-gray-500">
+                <p className="text-xs text-slate-400 dark:text-slate-500">
                   1 porción = 1 taza de ensalada o 1/2 taza cocidos
                 </p>
               </div>
@@ -567,19 +573,20 @@ export default function EvaluationPage() {
                   }
                   className="h-11"
                 />
-                <p className="text-xs text-gray-500">
+                <p className="text-xs text-slate-400 dark:text-slate-500">
                   Comida rápida, snacks, empaquetados, etc.
                 </p>
               </div>
             </div>
-          </div>
+          </>
         );
 
       case 4:
         return (
-          <div className="space-y-5">
-            <div className="bg-blue-50 border-l-4 border-blue-600 p-4 mb-4 rounded-r-lg">
-              <p className="text-sm text-blue-900">
+          <>
+            <div className="bg-blue-50 dark:bg-blue-900/20 border-l-4 border-blue-600 p-4 rounded-r-lg flex items-start gap-3">
+              <Activity className="w-5 h-5 text-blue-600 dark:text-blue-400 flex-shrink-0 mt-0.5" />
+              <p className="text-sm text-blue-900 dark:text-blue-100 font-medium leading-relaxed">
                 La actividad física es esencial. Ayúdanos a entender tu nivel de
                 movimiento diario y ejercicio.
               </p>
@@ -616,7 +623,7 @@ export default function EvaluationPage() {
                     Extremadamente activo (atleta/trabajo físico)
                   </option>
                 </Select>
-                <p className="text-xs text-gray-500">
+                <p className="text-xs text-slate-400 dark:text-slate-500">
                   Considera tu actividad en un día típico
                 </p>
               </div>
@@ -642,20 +649,21 @@ export default function EvaluationPage() {
                   }
                   className="h-11"
                 />
-                <p className="text-xs text-gray-500">
+                <p className="text-xs text-slate-400 dark:text-slate-500">
                   Ejercicio intencional de al menos 30 minutos (gym, running,
                   deporte, etc.)
                 </p>
               </div>
             </div>
-          </div>
+          </>
         );
 
       case 5:
         return (
-          <div className="space-y-5">
-            <div className="bg-blue-50 border-l-4 border-blue-600 p-4 mb-4 rounded-r-lg">
-              <p className="text-sm text-blue-900">
+          <>
+            <div className="bg-blue-50 dark:bg-blue-900/20 border-l-4 border-blue-600 p-4 rounded-r-lg flex items-start gap-3">
+              <Heart className="w-5 h-5 text-blue-600 dark:text-blue-400 flex-shrink-0 mt-0.5" />
+              <p className="text-sm text-blue-900 dark:text-blue-100 font-medium leading-relaxed">
                 Tu bienestar emocional es tan importante como el físico.
                 Compártenos cómo te sientes.
               </p>
@@ -677,7 +685,7 @@ export default function EvaluationPage() {
                   }
                   className="h-11"
                 />
-                <p className="text-xs text-gray-500">
+                <p className="text-xs text-slate-400 dark:text-slate-500">
                   <span className="inline-block w-2 h-2 bg-green-500 rounded-full mr-1"></span>
                   1-3: Relajado
                   <span className="inline-block w-2 h-2 bg-yellow-500 rounded-full mr-1 ml-2"></span>
@@ -716,7 +724,7 @@ export default function EvaluationPage() {
                     Muy energético (podría hacer más)
                   </option>
                 </Select>
-                <p className="text-xs text-gray-500">
+                <p className="text-xs text-slate-400 dark:text-slate-500">
                   Piensa en cómo te sientes al final de un día típico
                 </p>
               </div>
@@ -736,7 +744,7 @@ export default function EvaluationPage() {
                   }
                   className="h-11"
                 />
-                <p className="text-xs text-gray-500">
+                <p className="text-xs text-slate-400 dark:text-slate-500">
                   Considera tu salud física, mental y emocional en conjunto
                 </p>
               </div>
@@ -759,7 +767,7 @@ export default function EvaluationPage() {
                   }
                   className="h-11"
                 />
-                <p className="text-xs text-gray-500">
+                <p className="text-xs text-slate-400 dark:text-slate-500">
                   1: No estoy listo • 5: Pensando en ello • 10: Muy motivado
                   para cambiar
                 </p>
@@ -783,20 +791,21 @@ export default function EvaluationPage() {
                   }
                   className="h-11"
                 />
-                <p className="text-xs text-gray-500">
+                <p className="text-xs text-slate-400 dark:text-slate-500">
                   1: Muy inseguro • 5: Moderadamente seguro • 10: Totalmente
                   confiado
                 </p>
               </div>
             </div>
-          </div>
+          </>
         );
 
       case 6:
         return (
-          <div className="space-y-5">
-            <div className="bg-blue-50 border-l-4 border-blue-600 p-4 mb-4 rounded-r-lg">
-              <p className="text-sm text-blue-900">
+          <>
+            <div className="bg-blue-50 dark:bg-blue-900/20 border-l-4 border-blue-600 p-4 rounded-r-lg flex items-start gap-3">
+              <Cigarette className="w-5 h-5 text-blue-600 dark:text-blue-400 flex-shrink-0 mt-0.5" />
+              <p className="text-sm text-blue-900 dark:text-blue-100 font-medium leading-relaxed">
                 Información confidencial sobre alcohol y tabaco. Tus respuestas
                 nos ayudan a darte mejores recomendaciones.
               </p>
@@ -817,7 +826,7 @@ export default function EvaluationPage() {
                   <option value="false">No consumo alcohol</option>
                   <option value="true">Sí, consumo alcohol</option>
                 </Select>
-                <p className="text-xs text-gray-500">
+                <p className="text-xs text-slate-400 dark:text-slate-500">
                   Selecciona con honestidad, es confidencial
                 </p>
               </div>
@@ -850,7 +859,7 @@ export default function EvaluationPage() {
                   </option>
                   <option value="DAILY">Diariamente</option>
                 </Select>
-                <p className="text-xs text-gray-500">
+                <p className="text-xs text-slate-400 dark:text-slate-500">
                   {formData.drinksAlcohol
                     ? "Cuéntanos con qué frecuencia"
                     : "Deshabilitado porque no consumes"}
@@ -871,7 +880,7 @@ export default function EvaluationPage() {
                   <option value="false">No fumo</option>
                   <option value="true">Sí, fumo o vapeo</option>
                 </Select>
-                <p className="text-xs text-gray-500">
+                <p className="text-xs text-slate-400 dark:text-slate-500">
                   Incluye cigarrillos, vaper, puros, etc.
                 </p>
               </div>
@@ -894,14 +903,14 @@ export default function EvaluationPage() {
                   disabled={!formData.smokesTobacco}
                   className="h-11"
                 />
-                <p className="text-xs text-gray-500">
+                <p className="text-xs text-slate-400 dark:text-slate-500">
                   {formData.smokesTobacco
                     ? "Cantidad promedio diaria"
                     : "Deshabilitado porque no fumas"}
                 </p>
               </div>
             </div>
-          </div>
+          </>
         );
 
       default:
@@ -910,117 +919,112 @@ export default function EvaluationPage() {
   };
 
   return (
-    <div className="max-w-5xl mx-auto">
-      {/* Header estilo Vercel */}
-      <div className="mb-12">
-        <h1 className="text-4xl md:text-5xl font-bold mb-3 tracking-tight">
+    <div className="max-w-5xl mx-auto space-y-10 animate-fade-in">
+      {/* Header */}
+      <div className="text-center space-y-2">
+        <h1 className="text-3xl font-bold text-slate-900 dark:text-white tracking-tight">
           Evaluación de Salud
         </h1>
-        <p className="text-gray-500 text-base md:text-lg">
+        <p className="text-slate-500 dark:text-slate-400 font-medium">
           Paso {currentStep} de {STEPS.length}
         </p>
-      </div>
-
-      {/* Progress Bar estilo Vercel */}
-      <div className="mb-10">
-        <div className="h-1 bg-gray-100 rounded-full overflow-hidden">
+        {/* Progress Bar */}
+        <div className="w-full max-w-xs mx-auto h-1 bg-slate-200 dark:bg-slate-700 rounded-full mt-4 overflow-hidden">
           <div
-            className="h-full bg-blue-600 transition-all duration-500 ease-out"
+            className="h-full bg-primary rounded-full transition-all duration-500 ease-out"
             style={{ width: `${(currentStep / STEPS.length) * 100}%` }}
           />
         </div>
       </div>
 
-      {/* Visual Stepper estilo Vercel */}
-      <div className="mb-12 overflow-x-auto pb-4">
-        <div className="flex items-start justify-between min-w-max md:min-w-0 gap-2">
-          {STEPS.map((step, index) => {
-            const StepIcon = step.icon;
-            const isCompleted = currentStep > step.id;
-            const isCurrent = currentStep === step.id;
+      {/* Visual Stepper */}
+      <div className="flex justify-between items-start w-full max-w-4xl mx-auto relative px-4">
+        {/* Connection Line */}
+        <div className="absolute top-6 left-0 right-0 mx-auto w-[calc(100%-8rem)] h-0.5 bg-slate-200 dark:bg-slate-700 z-[1] hidden md:block"></div>
 
-            return (
-              <div key={step.id} className="flex items-start flex-1">
-                <div className="flex flex-col items-center w-full">
-                  {/* Badge minimalista */}
-                  <div
-                    className={`relative flex my-2.5 items-center justify-center w-12 h-12 md:w-14 md:h-14 rounded-xl transition-all duration-200 ${
-                      isCompleted
-                        ? "bg-blue-600 text-white"
-                        : isCurrent
-                        ? "bg-blue-50 text-blue-600 ring-2 ring-blue-600"
-                        : "bg-gray-50 text-gray-400"
-                    }`}
-                  >
-                    {isCompleted ? (
-                      <Check className="w-6 h-6" strokeWidth={2.5} />
-                    ) : (
-                      <StepIcon className="w-6 h-6" strokeWidth={2} />
-                    )}
-                  </div>
+        {STEPS.map((step, index) => {
+          const StepIcon = step.icon;
+          const isCompleted = currentStep > step.id;
+          const isCurrent = currentStep === step.id;
 
-                  {/* Título minimalista */}
-                  <p
-                    className={`mt-3 text-xs md:text-sm font-medium text-center max-w-[90px] transition-colors ${
-                      isCurrent
-                        ? "text-blue-600"
-                        : isCompleted
-                        ? "text-gray-600"
-                        : "text-gray-400"
-                    }`}
-                  >
-                    {step.title}
-                  </p>
-                </div>
-
-                {/* Línea conectora sutil */}
-                {index < STEPS.length - 1 && (
-                  <div className="flex-1 mx-2 mt-6">
-                    <div
-                      className={`h-px transition-all duration-300 ${
-                        isCompleted ? "bg-blue-600" : "bg-gray-200"
-                      }`}
-                    />
-                  </div>
+          return (
+            <div
+              key={step.id}
+              className={`flex flex-col items-center gap-2 relative z-2 ${
+                !isCompleted && !isCurrent
+                  ? "opacity-90 cursor-not-allowed"
+                  : "cursor-pointer"
+              } ${
+                !isCurrent && isCompleted ? "group hover:opacity-100" : ""
+              } transition-opacity`}
+              onClick={() => isCompleted && setCurrentStep(step.id)}
+            >
+              <div
+                className={`w-12 h-12 rounded-xl flex items-center justify-center transition-all relative ${
+                  isCompleted
+                    ? "bg-primary text-white shadow-lg shadow-blue-500/20 group-hover:scale-105"
+                    : isCurrent
+                    ? "bg-white dark:bg-primary border-2 border-primary text-white shadow-lg shadow-blue-500/10 ring-4 ring-blue-50 dark:ring-blue-900/20"
+                    : "bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 text-slate-400"
+                }`}
+              >
+                {isCompleted ? (
+                  <Check className="w-6 h-6" />
+                ) : (
+                  <StepIcon className="w-6 h-6" />
                 )}
               </div>
-            );
-          })}
-        </div>
+              <span
+                className={`text-xs font-${
+                  isCurrent ? "bold" : isCompleted ? "semibold" : "medium"
+                } text-center w-20 ${
+                  isCompleted || isCurrent
+                    ? "text-primary dark:text-blue-400"
+                    : "text-slate-500 dark:text-slate-400"
+                }`}
+              >
+                {step.title.split(" ").map((word, i) => (
+                  <span key={i}>
+                    {word}
+                    <br />
+                  </span>
+                ))}
+              </span>
+            </div>
+          );
+        })}
       </div>
 
-      {/* Card del contenido estilo Vercel */}
-      <Card className="border shadow-sm hover:shadow-md transition-shadow duration-200">
-        <CardHeader className="border-b">
-          <div className="flex items-center gap-4">
-            <div className="w-11 h-11 bg-blue-600 rounded-lg flex items-center justify-center">
+      {/* Card del contenido */}
+      <Card className="bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700/50 rounded-2xl shadow-xl shadow-slate-200/50 dark:shadow-slate-900/50 overflow-hidden animate-slide-up">
+        <CardHeader className="p-6 md:p-8 border-b border-slate-100 dark:border-slate-700/50">
+          <div className="flex items-start gap-4">
+            <div className="bg-primary rounded-lg p-2.5 text-white shadow-md shadow-blue-500/20">
               {(() => {
                 const StepIcon = STEPS[currentStep - 1].icon;
-                return (
-                  <StepIcon className="w-6 h-6 text-white" strokeWidth={2} />
-                );
+                return <StepIcon className="w-6 h-6" strokeWidth={2} />;
               })()}
             </div>
             <div className="flex-1">
-              <CardTitle className="text-xl font-semibold">
+              <CardTitle className="text-xl font-bold text-slate-900 dark:text-white">
                 {STEPS[currentStep - 1].title}
               </CardTitle>
-              <CardDescription className="text-sm mt-1 text-gray-500">
+              <CardDescription className="text-sm mt-0.5 text-slate-500 dark:text-slate-400">
                 {STEPS[currentStep - 1].description}
               </CardDescription>
             </div>
           </div>
         </CardHeader>
 
-        <CardContent className="pt-6 pb-6">
+        <CardContent className="p-6 md:p-8">
           {/* Step Content */}
-          <div className="mb-6">{renderStepContent()}</div>
+          <div className="space-y-8">{renderStepContent()}</div>
 
           {/* Error Message */}
           {error && (
-            <div className="mb-6 text-sm text-red-600 bg-red-50 p-4 rounded-lg border border-red-200 flex items-start gap-3">
+            <div className="mt-6 bg-red-50 dark:bg-red-900/20 border-l-4 border-red-500 p-4 rounded-r-lg flex items-start gap-3 animate-slide-down">
               <svg
-                className="w-5 h-5 mt-0.5 flex-shrink-0"
+                className="w-5 h-5 mt-0.5 flex-shrink-0 text-red-500"
                 fill="currentColor"
                 viewBox="0 0 20 20"
               >
@@ -1030,51 +1034,53 @@ export default function EvaluationPage() {
                   clipRule="evenodd"
                 />
               </svg>
-              <span className="font-medium">{error}</span>
+              <p className="text-sm text-red-900 dark:text-red-100 font-medium">
+                {error}
+              </p>
             </div>
           )}
-
-          {/* Navigation Buttons estilo Vercel */}
-          <div className="flex gap-3 pt-4 border-t">
-            <Button
-              variant="outline"
-              onClick={handleBack}
-              disabled={currentStep === 1 || loading}
-              className="flex-1 h-11 font-medium transition-colors disabled:opacity-50"
-            >
-              <ArrowLeft className="w-4 h-4 mr-2" />
-              Anterior
-            </Button>
-            {currentStep < STEPS.length ? (
-              <Button
-                onClick={handleNext}
-                disabled={loading}
-                className="flex-1 h-11 font-medium bg-blue-600 text-white hover:bg-blue-700 transition-colors"
-              >
-                Siguiente
-                <ArrowRight className="w-4 h-4 ml-2" />
-              </Button>
-            ) : (
-              <Button
-                onClick={handleSubmit}
-                disabled={loading}
-                className="flex-1 h-11 font-medium bg-blue-600 hover:bg-blue-700 transition-colors"
-              >
-                {loading ? (
-                  <>
-                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                    Generando Plan...
-                  </>
-                ) : (
-                  <>
-                    <Check className="w-4 h-4 mr-2" />
-                    Finalizar y Generar Plan
-                  </>
-                )}
-              </Button>
-            )}
-          </div>
         </CardContent>
+
+        {/* Navigation Buttons */}
+        <div className="px-6 py-5 md:px-8 bg-slate-50 dark:bg-slate-800/50 border-t border-slate-100 dark:border-slate-700/50 flex flex-col-reverse md:flex-row justify-between items-center gap-4">
+          <Button
+            variant="outline"
+            onClick={handleBack}
+            disabled={currentStep === 1 || loading}
+            className="w-full md:w-auto px-6 py-2.5 rounded-lg border border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-300 hover:bg-white dark:hover:bg-slate-700 hover:text-primary transition-all font-medium disabled:opacity-50 disabled:cursor-not-allowed group"
+          >
+            <ArrowLeft className="w-4 h-4 mr-2 transition-transform group-hover:-translate-x-1" />
+            Anterior
+          </Button>
+          {currentStep < STEPS.length ? (
+            <Button
+              onClick={handleNext}
+              disabled={loading}
+              className="w-full md:w-auto px-8 py-2.5 rounded-lg bg-primary hover:bg-primary/90 text-white font-medium shadow-md shadow-blue-500/20 hover:shadow-lg hover:shadow-blue-500/30 transition-all group"
+            >
+              Siguiente
+              <ArrowRight className="w-4 h-4 ml-2 transition-transform group-hover:translate-x-1" />
+            </Button>
+          ) : (
+            <Button
+              onClick={handleSubmit}
+              disabled={loading}
+              className="w-full md:w-auto px-8 py-2.5 rounded-lg bg-primary hover:bg-primary/90 text-white font-medium shadow-md shadow-blue-500/20 hover:shadow-lg hover:shadow-blue-500/30 transition-all group"
+            >
+              {loading ? (
+                <>
+                  <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin mr-2" />
+                  Generando plan...
+                </>
+              ) : (
+                <>
+                  Generar Plan
+                  <CheckCircle className="w-4 h-4 ml-2 transition-transform group-hover:scale-110" />
+                </>
+              )}
+            </Button>
+          )}
+        </div>
       </Card>
     </div>
   );

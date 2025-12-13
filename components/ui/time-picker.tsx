@@ -70,53 +70,54 @@ export function TimePicker({
   return (
     <div className={cn("space-y-2", className)}>
       {label && (
-        <Label htmlFor={id} className="text-sm font-medium">
-          {label} {required && "*"}
+        <Label
+          htmlFor={id}
+          className="text-sm font-semibold text-slate-700 dark:text-slate-300"
+        >
+          {label} {required && <span className="text-red-500">*</span>}
         </Label>
       )}
-      <div className="flex items-center gap-2">
-        <div className="flex items-center gap-2 flex-1 bg-white border border-gray-200 rounded-lg px-3 py-2 focus-within:ring-2 focus-within:ring-blue-600 focus-within:border-transparent transition-all">
-          <Clock className="w-4 h-4 text-gray-400" />
+      <div className="flex items-center gap-2 py-2 border border-slate-200 dark:border-slate-700 rounded-lg bg-white dark:bg-slate-800 focus-within:ring-2 focus-within:ring-primary/20 focus-within:border-primary transition-all">
+        <Clock className="w-8 h-8 text-slate-400 px-1 mx-3" />
 
-          {/* Hour Select */}
-          <Select
-            value={current.hour}
-            onChange={(e) => handleChange("hour", e.target.value)}
-            className="border-0 bg-transparent p-0 h-auto focus:ring-0 w-16 text-center font-medium"
-            id={id}
-          >
-            {hours.map((h) => (
-              <option key={h} value={h}>
-                {h}
-              </option>
-            ))}
-          </Select>
+        {/* Hour Select */}
+        <Select
+          value={current.hour}
+          onChange={(e) => handleChange("hour", e.target.value)}
+          className="border-0 text-xl bg-transparent p-0 h-auto focus:ring-0 w-16 text-center font-medium text-slate-700 dark:text-slate-200"
+          id={id}
+        >
+          {hours.map((h) => (
+            <option key={h} value={h}>
+              {h}
+            </option>
+          ))}
+        </Select>
 
-          <span className="text-gray-400 font-bold">:</span>
+        <span className="text-slate-400 font-bold mx-2.5">:</span>
 
-          {/* Minute Select */}
-          <Select
-            value={current.minute}
-            onChange={(e) => handleChange("minute", e.target.value)}
-            className="border-0 bg-transparent p-0 h-auto focus:ring-0 w-16 text-center font-medium"
-          >
-            {minutes.map((m) => (
-              <option key={m} value={m}>
-                {m}
-              </option>
-            ))}
-          </Select>
+        {/* Minute Select */}
+        <Select
+          value={current.minute}
+          onChange={(e) => handleChange("minute", e.target.value)}
+          className="border-0 bg-transparent p-0 h-auto text-xl focus:ring-0 w-16 text-center font-medium text-slate-700 dark:text-slate-200"
+        >
+          {minutes.map((m) => (
+            <option key={m} value={m}>
+              {m}
+            </option>
+          ))}
+        </Select>
 
-          {/* AM/PM Select */}
-          <Select
-            value={current.period}
-            onChange={(e) => handleChange("period", e.target.value)}
-            className="border-0 bg-transparent p-0 h-auto focus:ring-0 w-16 text-center font-semibold text-blue-600"
-          >
-            <option value="AM">AM</option>
-            <option value="PM">PM</option>
-          </Select>
-        </div>
+        {/* AM/PM Select */}
+        <Select
+          value={current.period}
+          onChange={(e) => handleChange("period", e.target.value)}
+          className="border-0 bg-transparent mx-3.5 text-xl p-0 h-auto focus:ring-0 w-16 text-center font-bold text-primary dark:text-blue-400 ml-auto"
+        >
+          <option value="AM">AM</option>
+          <option value="PM">PM</option>
+        </Select>
       </div>
     </div>
   );

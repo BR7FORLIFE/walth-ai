@@ -89,35 +89,62 @@ export default function LandingPage() {
             </button>
           </div>
         </div>
+
+        {/* Mobile Menu Dropdown */}
+        {isMobileMenuOpen && (
+          <div className="md:hidden border-t bg-white shadow-lg">
+            <div className="px-4 py-4 space-y-3">
+              <Link
+                href="/auth"
+                className="block"
+                onClick={() => setIsMobileMenuOpen(false)}
+              >
+                <Button variant="outline" size="sm" className="w-full">
+                  Iniciar Sesión
+                </Button>
+              </Link>
+              <Link
+                href="/auth"
+                className="block"
+                onClick={() => setIsMobileMenuOpen(false)}
+              >
+                <Button size="sm" className="w-full">
+                  Comenzar Gratis
+                  <ArrowRight className="ml-2 h-4 w-4" />
+                </Button>
+              </Link>
+            </div>
+          </div>
+        )}
       </nav>
 
       {/* Hero Section */}
-      <section className="pt-32 pb-20 px-4 sm:px-6 lg:px-8">
+      <section className="pt-24 sm:pt-32 pb-16 sm:pb-20 px-4 sm:px-6 lg:px-8">
         <div className="max-w-7xl mx-auto">
-          <div className="text-center space-y-8">
-            <div className="inline-flex items-center gap-2 px-4 py-2 bg-gray-100 rounded-full text-sm font-medium text-blue-900 hover:bg-gray-200 hover:scale-105 transition-all duration-300 cursor-default">
-              <Sparkles className="h-4 w-4 text-yellow-500 animate-pulse" />
+          <div className="text-center space-y-6 sm:space-y-8">
+            <div className="inline-flex items-center gap-2 px-3 sm:px-4 py-1.5 sm:py-2 bg-gray-100 rounded-full text-xs sm:text-sm font-medium text-blue-900 hover:bg-gray-200 hover:scale-105 transition-all duration-300 cursor-default">
+              <Sparkles className="h-3 w-3 sm:h-4 sm:w-4 text-yellow-500 animate-pulse" />
               IA Personalizada para tu Bienestar
             </div>
-            <h1 className="text-5xl md:text-7xl font-bold tracking-tight">
+            <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold tracking-tight px-4">
               Tu Asistente de
               <br />
               <span className="bg-gradient-to-r from-blue-900 to-blue-600 bg-clip-text text-transparent">
                 Salud Integral
               </span>
             </h1>
-            <p className="text-xl text-gray-700 max-w-2xl mx-auto">
+            <p className="text-base sm:text-lg md:text-xl text-gray-700 max-w-2xl mx-auto px-4">
               Evaluaciones personalizadas impulsadas por IA que transforman tus
               datos de salud en planes de hábitos efectivos y sostenibles.
             </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
-              <Link href="/auth">
+            <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center items-center px-4">
+              <Link href="/auth" className="w-full sm:w-auto">
                 <Button
                   size="lg"
-                  className="text-lg px-4 h-12 outline outline-black w-fit hover:scale-105 transition-transform duration-300"
+                  className="text-base sm:text-lg px-6 sm:px-8 h-11 sm:h-12 outline outline-black w-full sm:w-fit hover:scale-105 transition-transform duration-300"
                 >
                   Comenzar Ahora
-                  <ArrowRight className="ml-2 h-5 w-5" />
+                  <ArrowRight className="ml-2 h-4 w-4 sm:h-5 sm:w-5" />
                 </Button>
               </Link>
             </div>
@@ -126,25 +153,25 @@ export default function LandingPage() {
       </section>
 
       {/* CTA Section */}
-      <section className="py-20">
+      <section className="py-12 sm:py-20">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
           <Card className="bg-black text-white border-0 rounded-2xl overflow-hidden hover:scale-[1.02] transition-all duration-500 hover:shadow-2xl">
-            <CardContent className="relative py-16 text-center space-y-6">
-              <h2 className="text-4xl md:text-5xl font-bold">
+            <CardContent className="relative py-12 sm:py-16 text-center space-y-4 sm:space-y-6 px-4">
+              <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold">
                 Comienza tu Transformación Hoy
               </h2>
-              <p className="text-xl text-gray-300 max-w-2xl mx-auto">
+              <p className="text-base sm:text-lg md:text-xl text-gray-300 max-w-2xl mx-auto">
                 Únete a miles de personas que ya están mejorando su salud con
                 WelthIA
               </p>
-              <Link href="/auth">
+              <Link href="/auth" className="inline-block w-full sm:w-auto">
                 <Button
                   size="lg"
                   variant="secondary"
-                  className="text-lg px-8 h-12 transition-all duration-300 hover:scale-105 hover:shadow-xl active:scale-95 focus:outline-none focus:ring-4 ring-2 hover:bg-white hover:text-black hover:cursor-pointer ring-white focus:ring-white/30 mt-7"
+                  className="text-base sm:text-lg px-6 sm:px-8 h-11 sm:h-12 w-full sm:w-auto transition-all duration-300 hover:scale-105 hover:shadow-xl active:scale-95 focus:outline-none focus:ring-4 ring-2 hover:bg-white hover:text-black hover:cursor-pointer ring-white focus:ring-white/30 mt-4 sm:mt-7"
                 >
                   Crear Cuenta Gratis
-                  <ArrowRight className="ml-2 h-5 w-5 transition-transform duration-300 group-hover:translate-x-1" />
+                  <ArrowRight className="ml-2 h-4 w-4 sm:h-5 sm:w-5 transition-transform duration-300 group-hover:translate-x-1" />
                 </Button>
               </Link>
             </CardContent>
