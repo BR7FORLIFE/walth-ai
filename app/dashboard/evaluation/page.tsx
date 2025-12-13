@@ -85,11 +85,11 @@ export default function EvaluationPage() {
     weightKg: undefined,
     heightM: undefined,
     userSex: "MALE" as UserSex,
-    wakeTime: "",
-    sleepTime: "",
-    breakfastTime: "",
-    lunchTime: "",
-    dinnerTime: "",
+    wakeTime: "00:00",
+    sleepTime: "00:00",
+    breakfastTime: "00:00",
+    lunchTime: "00:00",
+    dinnerTime: "00:00",
     waterCupsDay: undefined,
     wakeDifficulty: 5,
     nightAwakenings: 0,
@@ -312,27 +312,31 @@ export default function EvaluationPage() {
               </p>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-              <TimePicker
-                id="wakeTime"
-                label="Hora habitual de despertar"
-                value={formData.wakeTime}
-                onChange={(value) => updateField("wakeTime", value)}
-                required
-              />
-              <p className="text-xs text-gray-500 -mt-3 md:col-span-1">
-                ¿A qué hora sueles levantarte entre semana?
-              </p>
+              <div className="space-y-2">
+                <TimePicker
+                  id="wakeTime"
+                  label="Hora habitual de despertar"
+                  value={formData.wakeTime || "00:00"}
+                  onChange={(value) => updateField("wakeTime", value)}
+                  required
+                />
+                <p className="text-xs text-gray-500">
+                  ¿A qué hora sueles levantarte entre semana?
+                </p>
+              </div>
 
-              <TimePicker
-                id="sleepTime"
-                label="Hora habitual de dormir"
-                value={formData.sleepTime}
-                onChange={(value) => updateField("sleepTime", value)}
-                required
-              />
-              <p className="text-xs text-gray-500 -mt-3 md:col-span-1">
-                ¿A qué hora te acuestas normalmente?
-              </p>
+              <div className="space-y-2">
+                <TimePicker
+                  id="sleepTime"
+                  label="Hora habitual de dormir"
+                  value={formData.sleepTime || "00:00"}
+                  onChange={(value) => updateField("sleepTime", value)}
+                  required
+                />
+                <p className="text-xs text-gray-500">
+                  ¿A qué hora te acuestas normalmente?
+                </p>
+              </div>
               <div className="space-y-2">
                 <Label htmlFor="wakeDifficulty" className="text-sm font-medium">
                   ¿Qué tan difícil te resulta despertar? *
@@ -442,38 +446,44 @@ export default function EvaluationPage() {
               </p>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-              <TimePicker
-                id="breakfastTime"
-                label="Hora habitual de desayuno"
-                value={formData.breakfastTime}
-                onChange={(value) => updateField("breakfastTime", value)}
-                required
-              />
-              <p className="text-xs text-gray-500 -mt-3 md:col-span-1">
-                Tu primera comida del día
-              </p>
+              <div className="space-y-2">
+                <TimePicker
+                  id="breakfastTime"
+                  label="Hora habitual de desayuno"
+                  value={formData.breakfastTime || "00:00"}
+                  onChange={(value) => updateField("breakfastTime", value)}
+                  required
+                />
+                <p className="text-xs text-gray-500">
+                  Tu primera comida del día
+                </p>
+              </div>
 
-              <TimePicker
-                id="lunchTime"
-                label="Hora habitual de almuerzo"
-                value={formData.lunchTime}
-                onChange={(value) => updateField("lunchTime", value)}
-                required
-              />
-              <p className="text-xs text-gray-500 -mt-3 md:col-span-1">
-                Tu comida principal del mediodía
-              </p>
+              <div className="space-y-2">
+                <TimePicker
+                  id="lunchTime"
+                  label="Hora habitual de almuerzo"
+                  value={formData.lunchTime || "00:00"}
+                  onChange={(value) => updateField("lunchTime", value)}
+                  required
+                />
+                <p className="text-xs text-gray-500">
+                  Tu comida principal del mediodía
+                </p>
+              </div>
 
-              <TimePicker
-                id="dinnerTime"
-                label="Hora habitual de cena"
-                value={formData.dinnerTime}
-                onChange={(value) => updateField("dinnerTime", value)}
-                required
-              />
-              <p className="text-xs text-gray-500 -mt-3 md:col-span-1">
-                Tu última comida del día
-              </p>
+              <div className="space-y-2">
+                <TimePicker
+                  id="dinnerTime"
+                  label="Hora habitual de cena"
+                  value={formData.dinnerTime || "00:00"}
+                  onChange={(value) => updateField("dinnerTime", value)}
+                  required
+                />
+                <p className="text-xs text-gray-500">
+                  Tu última comida del día
+                </p>
+              </div>
 
               <div className="space-y-2">
                 <Label htmlFor="waterCupsDay" className="text-sm font-medium">
