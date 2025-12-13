@@ -3,6 +3,18 @@ import { createSupabaseServerClient } from '@/lib/supabase/server';
 
 export const runtime = 'nodejs';
 
+type SubscriptionRow = {
+    tier: 'free' | 'premium';
+    current_period_end: string | null;
+} | null;
+
+function isPremiumSubscription(sub: SubscriptionRow) {
+    if (!sub) return false;
+    if (sub.tier !== 'premium') return false;
+    if (!sub.current_period_end) return true;
+    return new Date(sub.current_period_end).getTime() > Date.now();
+}
+
 type UiMessage = {
     id: string;
     role: 'user' | 'assistant' | 'system';
@@ -20,6 +32,31 @@ export async function GET() {
             return NextResponse.json(
                 { error: 'Usuario no autenticado' },
                 { status: 401 }
+            );
+        }
+
+        let subscription: SubscriptionRow = null;
+        const { data: sub, error: subError } = await supabase
+            .from('subscriptions')
+            .select('tier, current_period_end')
+            .eq('user_id', user.id)
+            .maybeSingle();
+
+        if (subError) {
+            // If the table isn't created yet, treat as free (chat is premium-only).
+            console.error('Error fetching subscription:', subError);
+        } else {
+            subscription = (sub as SubscriptionRow) ?? null;
+        }
+
+        const isPremium = isPremiumSubscription(subscription);
+        if (!isPremium) {
+            return NextResponse.json(
+                {
+                    error: 'Premium requerido para usar el chat.',
+                    code: 'PREMIUM_REQUIRED',
+                },
+                { status: 403 }
             );
         }
 

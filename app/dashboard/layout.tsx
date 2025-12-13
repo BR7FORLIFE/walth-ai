@@ -18,6 +18,7 @@ export default function DashboardLayout({
   const supabase = useMemo(() => createSupabaseBrowserClient(), []);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [username, setUsername] = useState("");
+  const [isPremium, setIsPremium] = useState<boolean>(false);
 
   useEffect(() => {
     let isMounted = true;
@@ -40,6 +41,23 @@ export default function DashboardLayout({
         user.email ??
         "";
       setUsername(displayName);
+
+      // Load premium status for premium-only features (like chat).
+      try {
+        const res = await fetch("/api/me");
+        if (!res.ok) {
+          if (res.status === 401) {
+            router.push("/auth");
+            return;
+          }
+          setIsPremium(false);
+          return;
+        }
+        const data = (await res.json()) as { isPremium?: boolean };
+        setIsPremium(Boolean(data.isPremium));
+      } catch {
+        setIsPremium(false);
+      }
     };
 
     loadUser();
@@ -58,6 +76,23 @@ export default function DashboardLayout({
         user.email ??
         "";
       setUsername(displayName);
+
+      fetch("/api/me")
+        .then(async (res) => {
+          if (!res.ok) {
+            if (res.status === 401) {
+              router.push("/auth");
+            }
+            return { isPremium: false } as { isPremium: boolean };
+          }
+          return (await res.json()) as { isPremium?: boolean };
+        })
+        .then((data) => {
+          setIsPremium(Boolean(data?.isPremium));
+        })
+        .catch(() => {
+          setIsPremium(false);
+        });
     });
 
     return () => {
@@ -83,11 +118,15 @@ export default function DashboardLayout({
       label: "Seguimiento",
       icon: TrendingUp,
     },
-    {
-      href: "/dashboard/asistente",
-      label: "Asistente",
-      icon: User,
-    },
+    ...(isPremium
+      ? ([
+          {
+            href: "/dashboard/asistente",
+            label: "Asistente",
+            icon: User,
+          },
+        ] as const)
+      : []),
   ];
 
   return (

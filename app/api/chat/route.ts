@@ -12,6 +12,18 @@ type IncomingMessage = {
     content?: unknown;
 } | null;
 
+type SubscriptionRow = {
+    tier: 'free' | 'premium';
+    current_period_end: string | null;
+} | null;
+
+function isPremiumSubscription(sub: SubscriptionRow) {
+    if (!sub) return false;
+    if (sub.tier !== 'premium') return false;
+    if (!sub.current_period_end) return true;
+    return new Date(sub.current_period_end).getTime() > Date.now();
+}
+
 function extractLastUserText(messages: IncomingMessage[]): string | null {
     for (let i = messages.length - 1; i >= 0; i -= 1) {
         const m = messages[i];
@@ -57,58 +69,83 @@ export async function POST(req: Request) {
         return new Response('Missing user message', { status: 400 });
     }
 
+    // Chat is premium-only.
+    // We enforce this at the API level to prevent bypassing the UI.
+    const supabaseForAuth = await createSupabaseServerClient();
+    const {
+        data: { user },
+    } = await supabaseForAuth.auth.getUser();
+    if (!user) {
+        return new Response('Usuario no autenticado', { status: 401 });
+    }
+
+    let subscription: SubscriptionRow = null;
+    const { data: sub, error: subError } = await supabaseForAuth
+        .from('subscriptions')
+        .select('tier, current_period_end')
+        .eq('user_id', user.id)
+        .maybeSingle();
+
+    if (subError) {
+        // If the table isn't created yet, treat as free (chat is premium-only).
+        console.error('Error fetching subscription:', subError);
+    } else {
+        subscription = (sub as SubscriptionRow) ?? null;
+    }
+
+    const isPremium = isPremiumSubscription(subscription);
+    if (!isPremium) {
+        return new Response('Premium requerido para usar el chat.', {
+            status: 403,
+        });
+    }
+
     // Load user context (auth + latest plan + recent chat history) from Supabase.
     // If anything fails (e.g., missing table), we still run the chat without history.
-    let username: string | null = null;
+    const username: string | null = (user.user_metadata?.username as
+        | string
+        | undefined) ?? null;
     let latestPlanSummary: string | null = null;
     let history: Array<{ role: 'user' | 'assistant'; content: string }> = [];
-    let userId: string | null = null;
+    const userId: string = user.id;
 
     try {
         const supabase = await createSupabaseServerClient();
-        const {
-            data: { user },
-        } = await supabase.auth.getUser();
 
-        if (user) {
-            userId = user.id;
-            username = (user.user_metadata?.username as string | undefined) ?? null;
+        const { data: plan } = await supabase
+            .from('habit_plans')
+            .select('summary')
+            .eq('user_id', userId)
+            .order('created_at', { ascending: false })
+            .limit(1)
+            .maybeSingle();
 
-            const { data: plan } = await supabase
-                .from('habit_plans')
-                .select('summary')
-                .eq('user_id', user.id)
-                .order('created_at', { ascending: false })
-                .limit(1)
-                .maybeSingle();
+        latestPlanSummary = (plan?.summary as string | undefined) ?? null;
 
-            latestPlanSummary = (plan?.summary as string | undefined) ?? null;
+        const { data: rows, error: historyError } = await supabase
+            .from('chat_messages')
+            .select('id, role, content')
+            .eq('user_id', userId)
+            .order('created_at', { ascending: false })
+            .limit(20);
 
-            const { data: rows, error: historyError } = await supabase
-                .from('chat_messages')
-                .select('id, role, content')
-                .eq('user_id', user.id)
-                .order('created_at', { ascending: false })
-                .limit(20);
+        if (historyError) {
+            console.error('Error fetching chat_messages:', historyError);
+        } else {
+            history = (rows ?? [])
+                .map((r) => ({
+                    role: (r.role as 'user' | 'assistant') ?? 'assistant',
+                    content: String(r.content ?? ''),
+                }))
+                .reverse();
+        }
 
-            if (historyError) {
-                console.error('Error fetching chat_messages:', historyError);
-            } else {
-                history = (rows ?? [])
-                    .map((r) => ({
-                        role: (r.role as 'user' | 'assistant') ?? 'assistant',
-                        content: String(r.content ?? ''),
-                    }))
-                    .reverse();
-            }
-
-            // Persist user message best-effort.
-            const { error: insertUserError } = await supabase
-                .from('chat_messages')
-                .insert({ user_id: user.id, role: 'user', content: userText });
-            if (insertUserError) {
-                console.error('Error inserting user chat message:', insertUserError);
-            }
+        // Persist user message best-effort.
+        const { error: insertUserError } = await supabase
+            .from('chat_messages')
+            .insert({ user_id: userId, role: 'user', content: userText });
+        if (insertUserError) {
+            console.error('Error inserting user chat message:', insertUserError);
         }
     } catch (e) {
         console.error('Chat context load failed:', e);
@@ -135,7 +172,6 @@ export async function POST(req: Request) {
         model: google(modelName),
         messages: coreMessages,
         onFinish: async ({ text }) => {
-            if (!userId) return;
             const assistantText = String(text ?? '').trim();
             if (!assistantText) return;
 
