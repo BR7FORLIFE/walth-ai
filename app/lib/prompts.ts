@@ -1,4 +1,4 @@
-import type { AssessmentRequest } from '@/app/types/assessment';
+import type { AssessmentRequest } from '@app/types/assessment';
 
 export function buildAssessmentPrompt(
   assessment: AssessmentRequest,
