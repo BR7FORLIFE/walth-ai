@@ -2,8 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Chat } from "@/app/_components/Chat";
-import { Button } from "@/components/ui/button";
+import { Chat } from "@app-components/Chat";
+import { Button } from "@components/ui/button";
 
 export default function AsistentePage() {
   const router = useRouter();

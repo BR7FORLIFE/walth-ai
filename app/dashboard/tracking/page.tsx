@@ -2,20 +2,20 @@
 
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { useRouter } from "next/navigation";
-import type { HabitPlan, Habit } from "@/app/types/assessment";
-import { Button } from "@/components/ui/button";
+import type { HabitPlan, Habit } from "@app/types/assessment";
+import { Button } from "@components/ui/button";
 import {
   ChartContainer,
   ChartTooltipContent,
   type ChartConfig,
-} from "@/components/ui/chart";
+} from "@components/ui/chart";
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card";
+} from "@components/ui/card";
 import { ClipboardList, TrendingUp, Calendar, Target } from "lucide-react";
 import {
   CartesianGrid,
