@@ -1,10 +1,9 @@
 "use client";
 
-import * as React from "react";
 import { Clock } from "lucide-react";
-import { cn } from "@/lib/utils";
-import { Select } from "@/components/ui/select";
-import { Label } from "@/components/ui/label";
+import { cn } from "@lib/utils";
+import Select from "@components/ui/select";
+import Label from "@components/ui/label";
 
 interface TimePickerProps {
   value?: string; // formato "HH:MM" (24h)
@@ -15,7 +14,7 @@ interface TimePickerProps {
   required?: boolean;
 }
 
-export function TimePicker({
+export default function TimePicker({
   value,
   onChange,
   id,
