@@ -8,7 +8,7 @@ import type {
   EndOfDayFeeling,
   AlcoholFrequency,
   HabitPlan,
-} from "@/app/types/assessment";
+} from "@app/types/assessment";
 
 export default function AssessmentForm() {
   const [loading, setLoading] = useState(false);
