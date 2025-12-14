@@ -2,20 +2,20 @@
 
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { createSupabaseBrowserClient } from "@/lib/supabase/client";
+import { supabase } from "@lib/supabase/client";
 
 export default function Home() {
   const router = useRouter();
 
   useEffect(() => {
-    const supabase = createSupabaseBrowserClient();
-    supabase.auth.getSession().then(({ data }) => {
-      if (data.session) {
-        router.push("/dashboard");
-      } else {
-        router.push("/landing");
-      }
-    });
+    async function checkSession(){
+      const { data } = await supabase.auth.getSession()
+
+      if(data.session) router.push("/dashboard")
+      else router.push("/landing")
+    }
+    
+    checkSession()
   }, [router]);
 
   return (
