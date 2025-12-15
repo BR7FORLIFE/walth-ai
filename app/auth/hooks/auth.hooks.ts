@@ -14,7 +14,7 @@ export default function useRedirectIfLogged() {
         }
 
         checkSession();
-    }, [router]);
+    }, []);
 
     return loading;
 }
