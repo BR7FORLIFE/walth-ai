@@ -3,7 +3,7 @@
 import * as React from "react";
 import { ResponsiveContainer, Tooltip } from "recharts";
 
-import { cn } from "@/lib/utils";
+import { cn } from "@lib/utils";
 
 export type ChartConfig = Record<
   string,

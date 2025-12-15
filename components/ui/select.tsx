@@ -1,6 +1,6 @@
 import * as React from "react";
 
-import { cn } from "@/lib/utils";
+import { cn } from "@lib/utils";
 
 const Select = React.forwardRef<
   HTMLSelectElement,
@@ -21,4 +21,4 @@ const Select = React.forwardRef<
 });
 Select.displayName = "Select";
 
-export { Select };
+export default Select;

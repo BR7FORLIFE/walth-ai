@@ -18,8 +18,18 @@
         "name": "next"
       }
     ],
+    "baseUrl": ".",
     "paths": {
-      "@/*": ["./*"]
+      "@app/*": ["app/*"],
+      "@components/*": ["components/*"],
+      "@lib/*": ["lib/*"],
+
+      "@app-components/*": ["app/_components/*"],
+      "@api/*": ["app/api/*"],
+      "@dashboard/*": ["app/dashboard/*"],
+      "@landing/*": ["app/landing/*"],
+      "@app-lib/*": ["app/lib/*"],
+      "@auth/*": ["app/auth/*"]
     }
   },
   "include": [

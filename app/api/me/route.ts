@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { createSupabaseServerClient } from '@/lib/supabase/server';
+import { supabase } from '@lib/supabase/client';
 
 export const runtime = 'nodejs';
 
@@ -19,7 +19,6 @@ function isPremiumSubscription(sub: SubscriptionRow) {
 
 export async function GET() {
     try {
-        const supabase = await createSupabaseServerClient();
         const {
             data: { user },
         } = await supabase.auth.getUser();

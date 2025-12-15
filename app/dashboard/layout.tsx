@@ -1,40 +1,35 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
-import { Button } from "@/components/ui/button";
+import { Button } from "@components/ui/button";
 import { ClipboardList, TrendingUp, LogOut, User, Menu, X } from "lucide-react";
-import { createSupabaseBrowserClient } from "@/lib/supabase/client";
+import { supabase } from "@lib/supabase/client";  // <-- AHORA USA TU SINGLETON
 
-export default function DashboardLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const pathname = usePathname();
-  const supabase = useMemo(() => createSupabaseBrowserClient(), []);
+
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [username, setUsername] = useState("");
   const [isPremium, setIsPremium] = useState<boolean>(false);
 
   useEffect(() => {
-    let isMounted = true;
+    let mounted = true;
 
     const loadUser = async () => {
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
+      const { data: { session } } = await supabase.auth.getSession();
 
-      if (!isMounted) return;
+      if (!mounted) return;
 
       if (!session) {
         router.push("/auth");
         return;
       }
 
+      // Set username
       const user = session.user;
       const displayName =
         (user.user_metadata?.username as string | undefined) ??
@@ -42,18 +37,16 @@ export default function DashboardLayout({
         "";
       setUsername(displayName);
 
-      // Load premium status for premium-only features (like chat).
+      // Load premium status
       try {
         const res = await fetch("/api/me");
         if (!res.ok) {
-          if (res.status === 401) {
-            router.push("/auth");
-            return;
-          }
+          if (res.status === 401) router.push("/auth");
           setIsPremium(false);
           return;
         }
-        const data = (await res.json()) as { isPremium?: boolean };
+
+        const data = await res.json();
         setIsPremium(Boolean(data.isPremium));
       } catch {
         setIsPremium(false);
@@ -62,76 +55,53 @@ export default function DashboardLayout({
 
     loadUser();
 
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
-      if (!session) {
-        router.push("/auth");
-        return;
-      }
+    // Auth state change listener
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      (_event, session) => {
+        if (!session) {
+          router.push("/auth");
+          return;
+        }
 
-      const user = session.user;
-      const displayName =
-        (user.user_metadata?.username as string | undefined) ??
-        user.email ??
-        "";
-      setUsername(displayName);
+        const user = session.user;
+        const displayName =
+          (user.user_metadata?.username as string | undefined) ??
+          user.email ??
+          "";
+        setUsername(displayName);
 
-      fetch("/api/me")
-        .then(async (res) => {
-          if (!res.ok) {
-            if (res.status === 401) {
-              router.push("/auth");
+        fetch("/api/me")
+          .then(async (res) => {
+            if (!res.ok) {
+              if (res.status === 401) router.push("/auth");
+              return { isPremium: false };
             }
-            return { isPremium: false } as { isPremium: boolean };
-          }
-          return (await res.json()) as { isPremium?: boolean };
-        })
-        .then((data) => {
-          setIsPremium(Boolean(data?.isPremium));
-        })
-        .catch(() => {
-          setIsPremium(false);
-        });
-    });
+            return res.json();
+          })
+          .then((data) => setIsPremium(Boolean(data?.isPremium)))
+          .catch(() => setIsPremium(false));
+      }
+    );
 
     return () => {
-      isMounted = false;
+      mounted = false;
       subscription.unsubscribe();
     };
-  }, [router, supabase]);
+  }, [router, pathname]); // supabase ya no va aquí porque es singleton
 
   const handleLogout = () => {
-    supabase.auth.signOut().finally(() => {
-      router.push("/landing");
-    });
+    supabase.auth.signOut().finally(() => router.push("/landing"));
   };
 
   const navItems = [
-    {
-      href: "/dashboard/evaluation",
-      label: "Nueva Evaluación",
-      icon: ClipboardList,
-    },
-    {
-      href: "/dashboard/tracking",
-      label: "Seguimiento",
-      icon: TrendingUp,
-    },
-    ...(isPremium
-      ? ([
-          {
-            href: "/dashboard/asistente",
-            label: "Asistente",
-            icon: User,
-          },
-        ] as const)
-      : []),
+    { href: "/dashboard/evaluation", label: "Nueva Evaluación", icon: ClipboardList },
+    { href: "/dashboard/tracking", label: "Seguimiento", icon: TrendingUp },
+    ...(isPremium ? [{ href: "/dashboard/asistente", label: "Asistente", icon: User }] : []),
   ];
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-900 flex flex-col">
-      {/* Header */}
+      {/* HEADER */}
       <nav className="bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between h-16 items-center">
@@ -160,22 +130,16 @@ export default function DashboardLayout({
                   {username}
                 </span>
               </div>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handleLogout}
-                className="flex items-center gap-1 text-sm"
-              >
+              <Button variant="outline" size="sm" onClick={handleLogout} className="flex items-center gap-1 text-sm">
                 <LogOut className="h-4 w-4" />
                 Salir
               </Button>
             </div>
 
-            {/* Mobile Menu Button */}
+            {/* Mobile menu button */}
             <button
               className="md:hidden p-2 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg transition-colors"
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-              aria-label="Toggle menu"
             >
               {isMobileMenuOpen ? (
                 <X className="h-6 w-6 text-slate-700 dark:text-slate-300" />
@@ -186,12 +150,13 @@ export default function DashboardLayout({
           </div>
         </div>
 
-        {/* Navigation Tabs - Desktop */}
+        {/* Navigation Tabs Desktop */}
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 border-t border-slate-100 dark:border-slate-700/50 hidden md:block">
           <div className="flex space-x-8">
             {navItems.map((item) => {
               const Icon = item.icon;
               const isActive = pathname === item.href;
+
               return (
                 <Link
                   key={item.href}
@@ -210,22 +175,21 @@ export default function DashboardLayout({
           </div>
         </div>
 
-        {/* Mobile Menu Dropdown */}
+        {/* Mobile menu */}
         {isMobileMenuOpen && (
           <div className="md:hidden border-t border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 shadow-lg">
             <div className="px-4 py-3 space-y-3">
               <div className="flex items-center gap-2 px-3 py-2 bg-slate-100 dark:bg-slate-700/50 rounded-lg">
                 <User className="h-4 w-4 text-slate-600 dark:text-slate-400" />
-                <span
-                  className="text-sm font-medium text-slate-900 dark:text-white"
-                  suppressHydrationWarning
-                >
+                <span className="text-sm font-medium" suppressHydrationWarning>
                   {username}
                 </span>
               </div>
+
               {navItems.map((item) => {
                 const Icon = item.icon;
                 const isActive = pathname === item.href;
+
                 return (
                   <Link
                     key={item.href}
@@ -242,12 +206,8 @@ export default function DashboardLayout({
                   </Link>
                 );
               })}
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handleLogout}
-                className="w-full"
-              >
+
+              <Button variant="outline" size="sm" onClick={handleLogout} className="w-full">
                 <LogOut className="h-4 w-4 mr-2" />
                 Salir
               </Button>
@@ -256,7 +216,6 @@ export default function DashboardLayout({
         )}
       </nav>
 
-      {/* Main Content */}
       <main className="grow py-10 px-4 sm:px-6 lg:px-8">
         <div className="max-w-7xl mx-auto animate-fade-in">{children}</div>
       </main>

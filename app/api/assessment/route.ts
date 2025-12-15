@@ -1,22 +1,26 @@
-import { google } from '@ai-sdk/google';
-import { generateText } from 'ai';
-import { NextResponse } from 'next/server';
-import type { AssessmentRequest, HabitPlan, Habit } from '@/app/types/assessment';
-import { buildAssessmentPrompt } from '@/app/lib/prompts';
-import { createSupabaseServerClient } from '@/lib/supabase/server';
+import { google } from "@ai-sdk/google";
+import { generateText } from "ai";
+import { NextResponse } from "next/server";
+import type {
+    AssessmentRequest,
+    HabitPlan,
+    Habit,
+} from "@app/types/assessment";
+import { buildAssessmentPrompt } from "@app-lib/prompts";
+import { supabase } from "@lib/supabase/client";
 
-export const runtime = 'nodejs';
+export const runtime = "nodejs";
 
 const FREE_EVALUATION_LIMIT = 10;
 
 type SubscriptionRow = {
-    tier: 'free' | 'premium';
+    tier: "free" | "premium";
     current_period_end: string | null;
 } | null;
 
 function isPremiumSubscription(sub: SubscriptionRow) {
     if (!sub) return false;
-    if (sub.tier !== 'premium') return false;
+    if (sub.tier !== "premium") return false;
     if (!sub.current_period_end) return true;
     return new Date(sub.current_period_end).getTime() > Date.now();
 }
@@ -25,24 +29,23 @@ export async function POST(req: Request) {
     try {
         if (!process.env.GOOGLE_GENERATIVE_AI_API_KEY) {
             return NextResponse.json(
-                { error: 'Missing GOOGLE_GENERATIVE_AI_API_KEY configuration' },
+                { error: "Missing GOOGLE_GENERATIVE_AI_API_KEY configuration" },
                 { status: 500 }
             );
         }
-
-        const supabase = await createSupabaseServerClient();
+        
         const {
             data: { user },
             error: authError,
         } = await supabase.auth.getUser();
 
         if (authError) {
-            console.error('Supabase auth error:', authError);
+            console.error("Supabase auth error:", authError);
         }
 
         if (!user) {
             return NextResponse.json(
-                { error: 'Usuario no autenticado' },
+                { error: "Usuario no autenticado" },
                 { status: 401 }
             );
         }
@@ -50,14 +53,14 @@ export async function POST(req: Request) {
         // Freemium gate: free users can generate up to N evaluations; premium is unlimited.
         let subscription: SubscriptionRow = null;
         const { data: sub, error: subError } = await supabase
-            .from('subscriptions')
-            .select('tier, current_period_end')
-            .eq('user_id', user.id)
+            .from("subscriptions")
+            .select("tier, current_period_end")
+            .eq("user_id", user.id)
             .maybeSingle();
 
         if (subError) {
             // If the table isn't created yet, treat as free.
-            console.error('Error fetching subscription:', subError);
+            console.error("Error fetching subscription:", subError);
         } else {
             subscription = (sub as SubscriptionRow) ?? null;
         }
@@ -66,14 +69,14 @@ export async function POST(req: Request) {
 
         if (!isPremium) {
             const { count, error: countError } = await supabase
-                .from('habit_plans')
-                .select('id', { count: 'exact', head: true })
-                .eq('user_id', user.id);
+                .from("habit_plans")
+                .select("id", { count: "exact", head: true })
+                .eq("user_id", user.id);
 
             if (countError) {
-                console.error('Error counting habit plans:', countError);
+                console.error("Error counting habit plans:", countError);
                 return NextResponse.json(
-                    { error: 'Failed to validate plan limit' },
+                    { error: "Failed to validate plan limit" },
                     { status: 500 }
                 );
             }
@@ -83,7 +86,7 @@ export async function POST(req: Request) {
                 return NextResponse.json(
                     {
                         error: `Has alcanzado el límite de ${FREE_EVALUATION_LIMIT} evaluaciones gratuitas. Pásate a Premium para evaluaciones ilimitadas e historial completo.`,
-                        code: 'FREE_LIMIT_REACHED',
+                        code: "FREE_LIMIT_REACHED",
                         limit: FREE_EVALUATION_LIMIT,
                     },
                     { status: 403 }
@@ -96,7 +99,7 @@ export async function POST(req: Request) {
         // Validate required fields
         if (!assessment.age || !assessment.weightKg) {
             return NextResponse.json(
-                { error: 'Missing required fields in assessment' },
+                { error: "Missing required fields in assessment" },
                 { status: 400 }
             );
         }
@@ -106,39 +109,58 @@ export async function POST(req: Request) {
         let historyContext: string | undefined;
         if (isPremium) {
             const { data: history, error: historyError } = await supabase
-                .from('habit_plans')
-                .select('created_at, assessment, habits, summary')
-                .eq('user_id', user.id)
-                .order('created_at', { ascending: false })
+                .from("habit_plans")
+                .select("created_at, assessment, habits, summary")
+                .eq("user_id", user.id)
+                .order("created_at", { ascending: false })
                 .limit(3);
 
             if (historyError) {
-                console.error('Error fetching history context:', historyError);
+                console.error("Error fetching history context:", historyError);
             } else if (history && history.length > 0) {
                 historyContext = history
                     .map((p) => {
-                        const createdAt = p.created_at ? new Date(p.created_at).toISOString().slice(0, 10) : 'sin-fecha';
-                        const a = (p.assessment ?? {}) as Partial<AssessmentRequest>;
-                        const habits = Array.isArray(p.habits) ? (p.habits as Array<Partial<Habit>>) : [];
+                        const createdAt = p.created_at
+                            ? new Date(p.created_at).toISOString().slice(0, 10)
+                            : "sin-fecha";
+                        const a = (p.assessment ??
+                            {}) as Partial<AssessmentRequest>;
+                        const habits = Array.isArray(p.habits)
+                            ? (p.habits as Array<Partial<Habit>>)
+                            : [];
                         const highPriority = habits
-                            .filter((h) => h?.priority === 'high')
+                            .filter((h) => h?.priority === "high")
                             .slice(0, 3)
                             .map((h) => h?.title)
                             .filter(Boolean)
-                            .join('; ');
+                            .join("; ");
 
                         const scores = [
-                            typeof a.wellbeingScore === 'number' ? `bienestar=${a.wellbeingScore}` : null,
-                            typeof a.stressLevel === 'number' ? `estrés=${a.stressLevel}` : null,
-                            typeof a.sleepRepairScore === 'number' ? `sueño=${a.sleepRepairScore}` : null,
-                            typeof a.exerciseFrequencyPerWeek === 'number' ? `ejercicio/sem=${a.exerciseFrequencyPerWeek}` : null,
+                            typeof a.wellbeingScore === "number"
+                                ? `bienestar=${a.wellbeingScore}`
+                                : null,
+                            typeof a.stressLevel === "number"
+                                ? `estrés=${a.stressLevel}`
+                                : null,
+                            typeof a.sleepRepairScore === "number"
+                                ? `sueño=${a.sleepRepairScore}`
+                                : null,
+                            typeof a.exerciseFrequencyPerWeek === "number"
+                                ? `ejercicio/sem=${a.exerciseFrequencyPerWeek}`
+                                : null,
                         ]
                             .filter(Boolean)
-                            .join(', ');
+                            .join(", ");
 
-                        return `- ${createdAt}${scores ? ` (${scores})` : ''}: ${p.summary}${highPriority ? ` | Hábitos alta prioridad: ${highPriority}` : ''}`;
+                        return `- ${createdAt}${
+                            scores ? ` (${scores})` : ""
+                        }: ${p.summary}${
+                            highPriority
+                                ? ` | Hábitos alta prioridad: ${highPriority}`
+                                : ""
+                        }`;
                     })
-                    .join('\n');
+                    .join("\n");
             }
         }
 
@@ -146,7 +168,7 @@ export async function POST(req: Request) {
         const prompt = buildAssessmentPrompt(assessment, { historyContext });
 
         // Generate habit plan using AI
-        const modelName = process.env.GEMINI_MODEL ?? 'gemini-2.0-flash';
+        const modelName = process.env.GEMINI_MODEL ?? "gemini-2.0-flash";
 
         const { text } = await generateText({
             model: google(modelName),
@@ -160,13 +182,13 @@ export async function POST(req: Request) {
             // Try to extract JSON from the response
             const jsonMatch = text.match(/\{[\s\S]*\}/);
             if (!jsonMatch) {
-                throw new Error('No JSON found in response');
+                throw new Error("No JSON found in response");
             }
             aiResponse = JSON.parse(jsonMatch[0]);
         } catch {
-            console.error('Failed to parse AI response:', text);
+            console.error("Failed to parse AI response:", text);
             return NextResponse.json(
-                { error: 'Failed to parse AI response', details: text },
+                { error: "Failed to parse AI response", details: text },
                 { status: 500 }
             );
         }
@@ -182,20 +204,20 @@ export async function POST(req: Request) {
 
         // Persist in Supabase
         const { data: savedPlan, error: saveError } = await supabase
-            .from('habit_plans')
+            .from("habit_plans")
             .insert({
                 user_id: user.id,
                 assessment,
                 habits: habitPlan.habits,
                 summary: habitPlan.summary,
             })
-            .select('id, user_id, created_at, assessment, habits, summary')
+            .select("id, user_id, created_at, assessment, habits, summary")
             .single();
 
         if (saveError) {
-            console.error('Error saving habit plan:', saveError);
+            console.error("Error saving habit plan:", saveError);
             return NextResponse.json(
-                { error: 'Failed to persist habit plan' },
+                { error: "Failed to persist habit plan" },
                 { status: 500 }
             );
         }
@@ -211,11 +233,12 @@ export async function POST(req: Request) {
 
         return NextResponse.json(responsePlan);
     } catch (error) {
-        console.error('Error generating habit plan:', error);
+        console.error("Error generating habit plan:", error);
         return NextResponse.json(
             {
-                error: 'Failed to generate habit plan',
-                details: error instanceof Error ? error.message : 'Unknown error'
+                error: "Failed to generate habit plan",
+                details:
+                    error instanceof Error ? error.message : "Unknown error",
             },
             { status: 500 }
         );
