@@ -15,7 +15,7 @@ export function normalizeUsername(raw: string) {
 export function usernameToSyntheticEmail(raw: string) {
   const username = normalizeUsername(raw);
   if (!username) return "";
-  return `${username}@welth.local`;
+  return `${username}@welth.app`;
 }
 
 // errores de Authenticacion por parte de supabase
